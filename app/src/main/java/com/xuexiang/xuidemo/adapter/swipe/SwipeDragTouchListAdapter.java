@@ -1,12 +1,13 @@
 package com.xuexiang.xuidemo.adapter.swipe;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
-import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.xuexiang.xui.adapter.recyclerview.BaseRecyclerAdapter;
+import com.xuexiang.xui.adapter.recyclerview.RecyclerViewHolder;
 import com.xuexiang.xuidemo.R;
-import com.xuexiang.xuidemo.adapter.base.BaseRecyclerAdapter;
-import com.xuexiang.xuidemo.adapter.base.RecyclerViewHolder;
 import com.yanzhenjie.recyclerview.SwipeRecyclerView;
 
 import java.util.Collections;
@@ -20,11 +21,35 @@ import java.util.List;
  */
 public class SwipeDragTouchListAdapter extends BaseRecyclerAdapter<String> {
 
+    /**
+     * 列表集合
+     */
+    public static final int TYPE_LIST = 1;
+    /**
+     * 网格集合
+     */
+    public static final int TYPE_GRID = 2;
+
+
     private SwipeRecyclerView mMenuRecyclerView;
 
-    public SwipeDragTouchListAdapter(List<String> list, SwipeRecyclerView recyclerView) {
+    private int mItemViewType;
+
+    public SwipeDragTouchListAdapter(List<String> list, int vewType, SwipeRecyclerView recyclerView) {
         super(list);
+        mItemViewType = vewType;
         mMenuRecyclerView = recyclerView;
+    }
+
+    public SwipeDragTouchListAdapter setItemViewType(int itemViewType) {
+        mItemViewType = itemViewType;
+        notifyDataSetChanged();
+        return this;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mItemViewType;
     }
 
     /**
@@ -35,7 +60,11 @@ public class SwipeDragTouchListAdapter extends BaseRecyclerAdapter<String> {
      */
     @Override
     public int getItemLayoutId(int viewType) {
-        return R.layout.adapter_drag_touch_list_item;
+        if (viewType == TYPE_LIST) {
+            return R.layout.adapter_drag_touch_list_item;
+        } else {
+            return R.layout.adapter_drag_touch_grid_item;
+        }
     }
 
     /**
@@ -46,27 +75,35 @@ public class SwipeDragTouchListAdapter extends BaseRecyclerAdapter<String> {
      * @param item
      */
     @Override
-    public void bindData(final RecyclerViewHolder holder, int position, String item) {
+    public void bindData(@NonNull final RecyclerViewHolder holder, int position, String item) {
         holder.text(R.id.tv_title, item);
 
-        holder.findViewById(R.id.iv_touch).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    mMenuRecyclerView.startDrag(holder);
-                }
-                return false;
+        holder.findViewById(R.id.iv_touch).setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                mMenuRecyclerView.startDrag(holder);
             }
+            return false;
         });
     }
 
     /**
-     * 拖拽移动
+     * List拖拽移动
+     *
+     * @param srcHolder
+     * @param targetHolder
+     * @return
+     */
+    public boolean onMoveItem(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
+       return mItemViewType == TYPE_LIST ? onMoveItemList(srcHolder, targetHolder) : onMoveItemGrid(srcHolder, targetHolder);
+    }
+
+    /**
+     * List拖拽移动
      *
      * @param srcHolder
      * @param targetHolder
      */
-    public boolean onMoveItem(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
+    public boolean onMoveItemList(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
         // 不同的ViewType不能拖拽换位置。
         if (srcHolder.getItemViewType() != targetHolder.getItemViewType()) {
             return false;
@@ -75,6 +112,38 @@ public class SwipeDragTouchListAdapter extends BaseRecyclerAdapter<String> {
         int toPosition = targetHolder.getAdapterPosition();
 
         Collections.swap(mData, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        // 返回true表示处理了并可以换位置，返回false表示你没有处理并不能换位置。
+        return true;
+    }
+
+
+
+    /**
+     * Grid样式的拖拽移动
+     *
+     * @param srcHolder
+     * @param targetHolder
+     */
+    public boolean onMoveItemGrid(RecyclerView.ViewHolder srcHolder, RecyclerView.ViewHolder targetHolder) {
+        // 不同的ViewType不能拖拽换位置。
+        if (srcHolder.getItemViewType() != targetHolder.getItemViewType()) {
+            return false;
+        }
+
+        // 真实的Position：通过ViewHolder拿到的position都需要减掉HeadView的数量。
+        int fromPosition = srcHolder.getAdapterPosition();
+        int toPosition = targetHolder.getAdapterPosition();
+
+        if (fromPosition < toPosition) {
+            for (int i = fromPosition; i < toPosition; i++) {
+                Collections.swap(mData, i, i + 1);
+            }
+        } else {
+            for (int i = fromPosition; i > toPosition; i--) {
+                Collections.swap(mData, i, i - 1);
+            }
+        }
         notifyItemMoved(fromPosition, toPosition);
         // 返回true表示处理了并可以换位置，返回false表示你没有处理并不能换位置。
         return true;

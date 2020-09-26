@@ -5,12 +5,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.IntDef;
-import android.support.v4.view.ViewCompat;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.IntDef;
+import androidx.core.view.ViewCompat;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -56,6 +60,34 @@ public class StatusBarUtils {
 
     private StatusBarUtils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
+    }
+
+    /**
+     * 设置沉浸式状态栏样式
+     *
+     * @param activity
+     * @param isDark   是否是深色的状态栏
+     */
+    public static void initStatusBarStyle(Activity activity, boolean isDark) {
+        initStatusBarStyle(activity, isDark, Color.TRANSPARENT);
+    }
+
+    /**
+     * 设置沉浸式状态栏样式
+     *
+     * @param activity
+     * @param isDark    是否是深色的状态栏
+     * @param colorOn5x 颜色
+     */
+    public static void initStatusBarStyle(Activity activity, boolean isDark, @ColorInt int colorOn5x) {
+        //设置沉浸式状态栏的颜色
+        translucent(activity, colorOn5x);
+        //修改状态栏的字体颜色
+        if (isDark) {
+            setStatusBarDarkMode(activity);
+        } else {
+            setStatusBarLightMode(activity);
+        }
     }
 
     /**
@@ -165,7 +197,9 @@ public class StatusBarUtils {
      * @param activity 需要被处理的 Activity
      */
     public static boolean setStatusBarLightMode(Activity activity) {
-        if (activity == null) return false;
+        if (activity == null) {
+            return false;
+        }
         // 无语系列：ZTK C2016只能时间和电池图标变色。。。。
         if (DeviceUtils.isZTKC2016()) {
             return false;
@@ -214,7 +248,9 @@ public class StatusBarUtils {
      * 支持 4.4 以上版本 MIUI 和 Flyme，以及 6.0 以上版本的其他 Android
      */
     public static boolean setStatusBarDarkMode(Activity activity) {
-        if (activity == null) return false;
+        if (activity == null) {
+            return false;
+        }
         if (mStatuBarType == STATUSBAR_TYPE_DEFAULT) {
             // 默认状态，不需要处理
             return true;
@@ -413,7 +449,7 @@ public class StatusBarUtils {
     /**
      * 获取状态栏的高度。
      */
-    public static int getStatusbarHeight(Context context) {
+    public static int getStatusBarHeight(Context context) {
         if (sStatusbarHeight == -1) {
             initStatusBarHeight(context);
         }
@@ -474,6 +510,112 @@ public class StatusBarUtils {
     @IntDef({STATUSBAR_TYPE_DEFAULT, STATUSBAR_TYPE_MIUI, STATUSBAR_TYPE_FLYME, STATUSBAR_TYPE_ANDROID6})
     @Retention(RetentionPolicy.SOURCE)
     private @interface StatusBarType {
+    }
+
+
+    /**
+     * 全屏
+     *
+     * @param activity
+     */
+    public static void fullScreen(Activity activity) {
+        fullScreen(activity.getWindow());
+    }
+
+    /**
+     * 全屏
+     *
+     * @param window
+     */
+    public static void fullScreen(Window window) {
+        if (Build.VERSION.SDK_INT >= KITKAT) {
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
+    }
+
+    /**
+     * 取消全屏
+     *
+     * @param activity
+     * @param statusBarColor     状态栏的颜色
+     * @param navigationBarColor 导航栏的颜色
+     */
+    public static void cancelFullScreen(Activity activity, @ColorInt int statusBarColor, @ColorInt int navigationBarColor) {
+        cancelFullScreen(activity.getWindow(), statusBarColor, navigationBarColor);
+    }
+
+    /**
+     * 取消全屏
+     *
+     * @param window
+     * @param statusBarColor     状态栏的颜色
+     * @param navigationBarColor 导航栏的颜色
+     */
+    public static void cancelFullScreen(Window window, @ColorInt int statusBarColor, @ColorInt int navigationBarColor) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
+                    | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            if (statusBarColor != -1) {
+                window.setStatusBarColor(statusBarColor);
+            }
+            if (navigationBarColor != -1) {
+                window.setNavigationBarColor(navigationBarColor);
+            }
+        }
+    }
+
+    /**
+     * 取消全屏
+     *
+     * @param activity
+     */
+    public static void cancelFullScreen(Activity activity) {
+        cancelFullScreen(activity.getWindow());
+    }
+
+    /**
+     * 取消全屏
+     *
+     * @param window
+     */
+    public static void cancelFullScreen(Window window) {
+        cancelFullScreen(window, -1, -1);
+    }
+
+
+    public static void setNavigationBarColor(Activity activity, int color) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP) {
+            //5.0以上可以直接设置 navigation颜色
+            activity.getWindow().setNavigationBarColor(color);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            ViewGroup decorView = (ViewGroup) activity.getWindow().getDecorView();
+            View navigationBar = new View(activity);
+            FrameLayout.LayoutParams params;
+            params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, getNavigationBarHeight(activity));
+            params.gravity = Gravity.BOTTOM;
+            navigationBar.setLayoutParams(params);
+            navigationBar.setBackgroundColor(color);
+            decorView.addView(navigationBar);
+        } else {
+            //4.4以下无法设置NavigationBar颜色
+        }
+
+    }
+
+    public static int getNavigationBarHeight(Context context) {
+        int height = 0;
+        int id = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        if (id > 0) {
+            height = context.getResources().getDimensionPixelSize(id);
+        }
+        return height;
     }
 
 }

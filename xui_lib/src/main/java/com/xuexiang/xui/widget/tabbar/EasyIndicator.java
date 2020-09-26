@@ -23,13 +23,9 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
-import android.support.v7.widget.LinearLayoutCompat;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -37,9 +33,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.utils.ResUtils;
 import com.xuexiang.xui.utils.ThemeUtils;
+
+import io.github.inflationx.calligraphy3.HasTypeface;
 
 /**
  * 简单的索引器
@@ -47,9 +51,8 @@ import com.xuexiang.xui.utils.ThemeUtils;
  * @author xuexiang
  * @since 2018/12/20 上午12:32
  */
-public class EasyIndicator extends LinearLayout implements View.OnClickListener, ViewPager.OnPageChangeListener {
+public class EasyIndicator extends LinearLayout implements View.OnClickListener, ViewPager.OnPageChangeListener, HasTypeface {
     private View mIndicator;
-    private int mPosition;
     private ViewPager mViewPager;
     /**
      * 选项卡点击监听
@@ -125,23 +128,26 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
      */
     private float indicator_select_textSize = indicator_textSize;
 
-
     public EasyIndicator(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public EasyIndicator(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, R.attr.EasyIndicatorStyle);
+    }
+
+    public EasyIndicator(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         setOrientation(VERTICAL);
         initScreenWidth();
-        init(context, attrs);
+        init(context, attrs, defStyleAttr);
     }
 
     /**
      * 初始化View
      */
-    private void init(Context context, AttributeSet attrs) {
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.EasyIndicator);
+    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.EasyIndicator, defStyleAttr, 0);
         if (a != null) {
             indicatorHeight = (int) getDimensionPixelSize(a, R.styleable.EasyIndicator_indicator_height, indicatorHeight);
             indicator_line_height = (int) getDimensionPixelSize(a, R.styleable.EasyIndicator_indicator_line_height, indicator_line_height);
@@ -184,6 +190,7 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
             view = new TextView(getContext());
             view.setTag(i);
             view.setText(tabTitles[i]);
+            view.setTypeface(XUI.getDefaultTypeface());
 
             view.setGravity(Gravity.CENTER);
             LayoutParams lp = new LayoutParams(0, indicatorHeight, 1.0f);
@@ -283,7 +290,7 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
     @Override
     public void onClick(View v) {
         TextView tv = (TextView) v;
-        mPosition = (int) v.getTag();
+        int mPosition = (int) v.getTag();
         if (mViewPager != null) {
             mViewPager.setCurrentItem(mPosition);
         } else {
@@ -298,9 +305,9 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
     }
 
     private void setSelectorColor(TextView tv) {
-        for (int i = 0; i < tvs.length; i++) {
-            tvs[i].setTextColor(indicator_normal_color);
-            tvs[i].setTextSize(TypedValue.COMPLEX_UNIT_PX, indicator_textSize);
+        for (TextView textView : tvs) {
+            textView.setTextColor(indicator_normal_color);
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, indicator_textSize);
         }
         tv.setTextColor(indicator_selected_color);
         tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, indicator_select_textSize);
@@ -320,13 +327,12 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
         LayoutParams ll = (LayoutParams) mIndicator
                 .getLayoutParams();
         if (mCurrIndex == position) {
-            ll.leftMargin = (int) (mCurrIndex * mIndicator.getMeasuredWidth() + positionOffset
-                    * mIndicator.getMeasuredWidth());
+            ll.setMarginStart((int) (mCurrIndex * mIndicator.getMeasuredWidth() + positionOffset
+                    * mIndicator.getMeasuredWidth()));
         } else if (mCurrIndex > position) {
-            ll.leftMargin = (int) (mCurrIndex * mIndicator.getMeasuredWidth() - (1 - positionOffset)
-                    * mIndicator.getMeasuredWidth());
+            ll.setMarginStart((int) (mCurrIndex * mIndicator.getMeasuredWidth() - (1 - positionOffset)
+                    * mIndicator.getMeasuredWidth()));
         }
-
         mIndicator.setLayoutParams(ll);
     }
 
@@ -339,6 +345,15 @@ public class EasyIndicator extends LinearLayout implements View.OnClickListener,
     @Override
     public void onPageScrollStateChanged(int state) {
 
+    }
+
+    @Override
+    public void setTypeface(Typeface typeface) {
+        if (tvs != null) {
+            for (TextView tv : tvs) {
+                tv.setTypeface(typeface);
+            }
+        }
     }
 
 

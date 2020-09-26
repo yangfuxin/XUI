@@ -22,7 +22,8 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.support.annotation.Keep;
+
+import androidx.annotation.Keep;
 
 import com.xuexiang.xui.utils.ThemeUtils;
 
@@ -60,7 +61,7 @@ public class IndeterminateHorizontalProgressDrawable extends BaseIndeterminatePr
         mProgressIntrinsicHeight = Math.round(PROGRESS_INTRINSIC_HEIGHT_DP * density);
         mPaddedIntrinsicHeight = Math.round(PADDED_INTRINSIC_HEIGHT_DP * density);
 
-        mBackgroundAlpha = ThemeUtils.getFloatFromAttrRes(context, android.R.attr.disabledAlpha, 0);
+        mBackgroundAlpha = ThemeUtils.resolveFloat(context, android.R.attr.disabledAlpha, 0);
 
         mAnimators = new Animator[] {
                 Animators.createIndeterminateHorizontalRect1(mRect1TransformX),
@@ -151,13 +152,11 @@ public class IndeterminateHorizontalProgressDrawable extends BaseIndeterminatePr
         }
 
         @Keep
-        @SuppressWarnings("unused")
         public void setTranslateX(float translateX) {
             mTranslateX = translateX;
         }
 
         @Keep
-        @SuppressWarnings("unused")
         public void setScaleX(float scaleX) {
             mScaleX = scaleX;
         }

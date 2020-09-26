@@ -1,9 +1,11 @@
 package com.xuexiang.xui.widget.banner.widget.loopviewpager;
 
 import android.content.Context;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +77,7 @@ public class LoopViewPager extends ViewPager {
         return mAdapter != null ? mAdapter.toRealPosition(super.getCurrentItem()) : 0;
     }
 
+    @Override
     public void setCurrentItem(int item, boolean smoothScroll) {
         int realItem = mAdapter.toInnerPosition(item);
         super.setCurrentItem(realItem, smoothScroll);
@@ -93,7 +96,7 @@ public class LoopViewPager extends ViewPager {
     }
 
     @Override
-    public void addOnPageChangeListener(OnPageChangeListener listener) {
+    public void addOnPageChangeListener(@NonNull OnPageChangeListener listener) {
         if (mOnPageChangeListeners == null) {
             mOnPageChangeListeners = new ArrayList<>();
         }
@@ -101,7 +104,7 @@ public class LoopViewPager extends ViewPager {
     }
 
     @Override
-    public void removeOnPageChangeListener(OnPageChangeListener listener) {
+    public void removeOnPageChangeListener(@NonNull OnPageChangeListener listener) {
         if (mOnPageChangeListeners != null) {
             mOnPageChangeListeners.remove(listener);
         }
@@ -169,11 +172,13 @@ public class LoopViewPager extends ViewPager {
 
             mPreviousOffset = positionOffset;
 
+            int lastPosition = mAdapter != null ? mAdapter.getRealCount() - 1 : -1;
+
             if (mOnPageChangeListeners != null) {
                 for (int i = 0; i < mOnPageChangeListeners.size(); i++) {
                     OnPageChangeListener listener = mOnPageChangeListeners.get(i);
                     if (listener != null) {
-                        if (realPosition != mAdapter.getRealCount() - 1) {
+                        if (realPosition != lastPosition) {
                             listener.onPageScrolled(realPosition, positionOffset, positionOffsetPixels);
                         } else {
                             if (positionOffset > .5) {

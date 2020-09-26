@@ -23,12 +23,12 @@
     android:background="@color/cookie_bar_default_bg_color"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingLeft="?attr/xui_config_content_spacing_horizontal"
+    android:paddingStart="?attr/xui_config_content_spacing_horizontal"
     android:paddingTop="36dp"
-    android:paddingRight="?attr/xui_config_content_spacing_horizontal"
+    android:paddingEnd="?attr/xui_config_content_spacing_horizontal"
     android:paddingBottom="?attr/xui_config_content_spacing_horizontal">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -76,7 +76,7 @@
         android:visibility="gone"
         tools:text="ACTION" />
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/btn_action_with_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

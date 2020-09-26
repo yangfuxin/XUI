@@ -1,18 +1,14 @@
 package com.xuexiang.xuidemo.fragment.components.refresh;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
-import com.scwang.smartrefresh.layout.api.RefreshLayout;
-import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
-import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.utils.WidgetUtils;
 import com.xuexiang.xuidemo.DemoDataProvider;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.RefreshHeadViewAdapter;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xuidemo.utils.Utils;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +43,7 @@ public class RefreshHeadViewFragment extends BaseFragment {
      */
     @Override
     protected void initViews() {
-        Utils.initRecyclerView(recyclerView);
+        WidgetUtils.initRecyclerView(recyclerView);
 
         recyclerView.setAdapter(mAdapter = new RefreshHeadViewAdapter(DemoDataProvider.getBannerList()));
     }
@@ -55,25 +51,12 @@ public class RefreshHeadViewFragment extends BaseFragment {
     @Override
     protected void initListeners() {
         //下拉刷新
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(final @NonNull RefreshLayout refreshLayout) {
-                refreshLayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.refresh(getData());
-                        refreshLayout.finishRefresh();
-                    }
-                }, 1000);
-            }
-        });
+        refreshLayout.setOnRefreshListener(refreshLayout -> refreshLayout.getLayout().postDelayed(() -> {
+            mAdapter.refresh(getData());
+            refreshLayout.finishRefresh();
+        }, 1000));
         //上拉加载
-        refreshLayout.setOnLoadMoreListener(new OnLoadMoreListener() {
-            @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                refreshLayout.finishLoadMore(1000);
-            }
-        });
+        refreshLayout.setOnLoadMoreListener(refreshLayout -> refreshLayout.finishLoadMore(1000));
         refreshLayout.autoRefresh();//第一次进入触发自动刷新，演示效果
     }
 

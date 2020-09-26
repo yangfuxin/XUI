@@ -16,7 +16,7 @@
 
 package com.xuexiang.xuidemo.fragment.utils;
 
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -93,12 +93,7 @@ public class ColorUtilsFragment extends BaseFragment {
 
         // 获取随机颜色
         getRandomColor();
-        mVRandom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getRandomColor();
-            }
-        });
+        mVRandom.setOnClickListener(v -> getRandomColor());
     }
 
     private void getRandomColor() {

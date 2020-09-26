@@ -17,14 +17,15 @@
 package com.xuexiang.xuidemo.activity;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.Nullable;
+import androidx.viewpager.widget.ViewPager;
 
 import com.xuexiang.xui.adapter.FragmentAdapter;
 import com.xuexiang.xui.widget.tabbar.EasyIndicator;
 import com.xuexiang.xuidemo.R;
-import com.xuexiang.xuidemo.fragment.components.tabbar.ContentPage;
+import com.xuexiang.xuidemo.base.BaseAppCompatActivity;
+import com.xuexiang.xuidemo.fragment.components.tabbar.tablayout.ContentPage;
 import com.xuexiang.xuidemo.fragment.components.tabbar.TestPageFragment;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ import java.util.List;
  * @author xuexiang
  * @since 2018/12/26 下午3:38
  */
-public class EasyIndicatorActivity extends AppCompatActivity {
+public class EasyIndicatorActivity extends BaseAppCompatActivity {
     EasyIndicator mEasyIndicator;
     ViewPager mViewPager;
 
@@ -53,7 +54,7 @@ public class EasyIndicatorActivity extends AppCompatActivity {
         }
         mEasyIndicator.setTabTitles(ContentPage.getPageNames());
         mEasyIndicator.setViewPager(mViewPager, new FragmentAdapter<>(getSupportFragmentManager(), list));
-        mViewPager.setOffscreenPageLimit(ContentPage.size());
+        mViewPager.setOffscreenPageLimit(ContentPage.size() - 1);
 
     }
 }

@@ -17,26 +17,29 @@
 package com.xuexiang.xuidemo.fragment.components.imageview.preview;
 
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
-import com.scwang.smartrefresh.layout.adapter.SmartViewHolder;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshLoadMoreListener;
 import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.adapter.recyclerview.GridDividerItemDecoration;
+import com.xuexiang.xui.adapter.recyclerview.RecyclerViewHolder;
+import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xui.widget.imageview.preview.PreviewBuilder;
 import com.xuexiang.xuidemo.DemoDataProvider;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.PreviewRecycleAdapter;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xuidemo.base.decorator.GridDividerItemDecoration;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.SettingSPUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.List;
 
@@ -96,7 +99,8 @@ public class PreviewRecycleViewFragment extends BaseFragment {
     @Override
     protected void initViews() {
         mRecyclerView.setLayoutManager(mGridLayoutManager = new GridLayoutManager(getContext(), 2));
-        mRecyclerView.addItemDecoration(new GridDividerItemDecoration(getContext(), 2));
+        mRecyclerView.addItemDecoration(new GridDividerItemDecoration(getContext(), 2, DensityUtils.dp2px(3)));
+
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mAdapter = new PreviewRecycleAdapter());
         mRefreshLayout.autoRefresh();//第一次进入触发自动刷新，演示效果
@@ -106,44 +110,40 @@ public class PreviewRecycleViewFragment extends BaseFragment {
     protected void initListeners() {
         mRefreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                mRefreshLayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPage++;
-                        if (mPage < getMediaRes().size()) {
-                            mAdapter.loadMore(getMediaRes().get(mPage));
-                            mRefreshLayout.finishLoadMore();
-                        } else {
-                            ToastUtils.toast("数据全部加载完毕");
-                            mRefreshLayout.finishLoadMoreWithNoMoreData();//将不会再次触发加载更多事件
-                        }
+            public void onLoadMore(final @NonNull RefreshLayout refreshLayout) {
+                refreshLayout.getLayout().postDelayed(() -> {
+                    mPage++;
+                    if (mPage < getMediaRes().size()) {
+                        mAdapter.loadMore(getMediaRes().get(mPage));
+                        refreshLayout.finishLoadMore();
+                    } else {
+                        XToastUtils.toast("数据全部加载完毕");
+                        refreshLayout.finishLoadMoreWithNoMoreData();//将不会再次触发加载更多事件
                     }
                 }, 1000);
             }
 
             @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                mRefreshLayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPage = 0;
-                        mAdapter.refresh(getMediaRes().get(mPage));
-                        mRefreshLayout.finishRefresh();
-                    }
+            public void onRefresh(final @NonNull RefreshLayout refreshLayout) {
+                refreshLayout.getLayout().postDelayed(() -> {
+                    mPage = 0;
+                    mAdapter.refresh(getMediaRes().get(mPage));
+                    refreshLayout.finishRefresh();
                 }, 1000);
 
             }
         });
 
-        mAdapter.setOnItemClickListener(new SmartViewHolder.OnItemClickListener() {
+        mAdapter.setOnItemClickListener(new RecyclerViewHolder.OnItemClickListener<ImageViewInfo>() {
+            @SingleClick
             @Override
-            public void onItemClick(View itemView, int position) {
+            public void onItemClick(View itemView, ImageViewInfo item, int position) {
                 computeBoundsBackward(mGridLayoutManager.findFirstVisibleItemPosition());
                 PreviewBuilder.from(getActivity())
-                        .setImgs(mAdapter.getListData())
+                        .setImgs(mAdapter.getData())
                         .setCurrentIndex(position)
                         .setSingleFling(true)
+                        .setProgressColor(SettingSPUtils.getInstance().isUseCustomTheme() ? R.color.custom_color_main_theme : R.color.xui_config_color_main_theme)
                         .setType(PreviewBuilder.IndicatorType.Number)
                         .start();
             }
@@ -155,7 +155,7 @@ public class PreviewRecycleViewFragment extends BaseFragment {
      * 从第一个完整可见item逆序遍历，如果初始位置为0，则不执行方法内循环
      */
     private void computeBoundsBackward(int firstCompletelyVisiblePos) {
-        for (int i = firstCompletelyVisiblePos; i < mAdapter.getCount(); i++) {
+        for (int i = firstCompletelyVisiblePos; i < mAdapter.getItemCount(); i++) {
             View itemView = mGridLayoutManager.findViewByPosition(i);
             Rect bounds = new Rect();
             if (itemView != null) {

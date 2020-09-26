@@ -1,8 +1,8 @@
 package com.xuexiang.xuidemo.utils.update;
 
+import com.xuexiang.xuidemo.utils.XToastUtils;
 import com.xuexiang.xupdate.entity.UpdateError;
 import com.xuexiang.xupdate.listener.OnUpdateFailureListener;
-import com.xuexiang.xutil.tip.ToastUtils;
 
 /**
  * 自定义版本更新提示
@@ -33,7 +33,10 @@ public class CustomUpdateFailureListener implements OnUpdateFailureListener {
     @Override
     public void onFailure(UpdateError error) {
         if (mNeedErrorTip) {
-            ToastUtils.toast(error.toString());
+            XToastUtils.toast(error.toString());
+        }
+        if (error.getCode() == UpdateError.ERROR.DOWNLOAD_FAILED) {
+            UpdateTipDialog.show("Github被墙无法下载，是否考虑切换蒲公英下载[密码:xuexiangjys]？");
         }
     }
 }

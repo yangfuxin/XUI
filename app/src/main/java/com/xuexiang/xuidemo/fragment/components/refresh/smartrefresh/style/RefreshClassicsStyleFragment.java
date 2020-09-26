@@ -19,14 +19,12 @@ package com.xuexiang.xuidemo.fragment.components.refresh.smartrefresh.style;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
-import android.support.annotation.StringRes;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
+
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.adapter.SmartRecyclerAdapter;
@@ -35,6 +33,8 @@ import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.header.ClassicsHeader;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.utils.ViewUtils;
+import com.xuexiang.xui.utils.WidgetUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
@@ -49,7 +49,6 @@ import java.util.Random;
 import butterknife.BindView;
 
 import static android.R.layout.simple_list_item_2;
-import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
 
 /**
  * @author xuexiang
@@ -82,7 +81,9 @@ public class RefreshClassicsStyleFragment extends BaseFragment implements SmartV
      */
     @Override
     public void onItemClick(View itemView, int position) {
-        if (!RefreshState.None.equals(mRefreshLayout.getState())) return;
+        if (!RefreshState.None.equals(mRefreshLayout.getState())) {
+            return;
+        }
 
         switch (Item.values()[position]) {
             case 背后固定:
@@ -142,7 +143,9 @@ public class RefreshClassicsStyleFragment extends BaseFragment implements SmartV
         mRefreshLayout.setPrimaryColorsId(colorPrimary, android.R.color.white);
         mTitleBar.setBackgroundColor(ContextCompat.getColor(getContext(), colorPrimary));
         if (Build.VERSION.SDK_INT >= 21) {
-            getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(), colorPrimary));
+            if (getActivity() != null) {
+                getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getContext(), colorPrimary));
+            }
             mDrawableProgress.setTint(0xffffffff);
         }
     }
@@ -195,9 +198,8 @@ public class RefreshClassicsStyleFragment extends BaseFragment implements SmartV
         View view = findViewById(R.id.recyclerView);
         if (view instanceof RecyclerView) {
             RecyclerView recyclerView = (RecyclerView) view;
-            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-            recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), VERTICAL));
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            WidgetUtils.initRecyclerView(recyclerView);
+
             recyclerView.setAdapter(new SmartRecyclerAdapter<Item>(Arrays.asList(Item.values()), simple_list_item_2, this) {
                 @Override
                 protected void onBindViewHolder(SmartViewHolder holder, Item model, int position) {
@@ -210,7 +212,7 @@ public class RefreshClassicsStyleFragment extends BaseFragment implements SmartV
             //触发自动刷新
             mRefreshLayout.autoRefresh();
         }
-
+        ViewUtils.setViewsFont(mRefreshLayout);
     }
 
 }

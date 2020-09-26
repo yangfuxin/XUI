@@ -21,7 +21,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -29,19 +28,19 @@ import com.xuexiang.xaop.annotation.IOThread;
 import com.xuexiang.xaop.annotation.Permission;
 import com.xuexiang.xaop.enums.ThreadType;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xpage.core.PageOption;
 import com.xuexiang.xqrcode.XQRCode;
-import com.xuexiang.xqrcode.ui.CaptureActivity;
 import com.xuexiang.xqrcode.util.QRCodeAnalyzeUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseSimpleListFragment;
+import com.xuexiang.xuidemo.fragment.expands.qrcode.CustomCaptureActivity;
 import com.xuexiang.xuidemo.fragment.expands.qrcode.CustomCaptureFragment;
 import com.xuexiang.xuidemo.fragment.expands.qrcode.QRCodeProduceFragment;
 import com.xuexiang.xuidemo.utils.Utils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 import com.xuexiang.xutil.app.IntentUtils;
 import com.xuexiang.xutil.app.PathUtils;
-import com.xuexiang.xutil.common.ClickUtils;
-import com.xuexiang.xutil.tip.ToastUtils;
 
 import java.util.List;
 
@@ -85,6 +84,7 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
     @Override
     protected List<String> initSimpleData(List<String> lists) {
         lists.add("默认扫描界面");
+        lists.add("默认扫描界面(自定义主题)");
         lists.add("定制化扫描界面");
         lists.add("远程扫描界面");
         lists.add("生成二维码图片");
@@ -104,15 +104,18 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
                 startScan(ScanType.DEFAULT);
                 break;
             case 1:
-                startScan(ScanType.CUSTOM);
+                startScan(ScanType.DEFAULT_Custom);
                 break;
             case 2:
-                startScan(ScanType.REMOTE);
+                startScan(ScanType.CUSTOM);
                 break;
             case 3:
-                openPage(QRCodeProduceFragment.class);
+                startScan(ScanType.REMOTE);
                 break;
             case 4:
+                openPage(QRCodeProduceFragment.class);
+                break;
+            case 5:
                 selectQRCode();
                 break;
             default:
@@ -133,10 +136,16 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
     private void startScan(ScanType scanType) {
         switch (scanType) {
             case CUSTOM:
-                openPageForResult(CustomCaptureFragment.class, null, REQUEST_CUSTOM_SCAN);
+                PageOption.to(CustomCaptureFragment.class)
+                        .setRequestCode(REQUEST_CUSTOM_SCAN)
+                        .setNewActivity(true)
+                        .open(this);
                 break;
             case DEFAULT:
-                startActivityForResult(new Intent(getActivity(), CaptureActivity.class), REQUEST_CODE);
+                XQRCode.startScan(this, REQUEST_CODE);
+                break;
+            case DEFAULT_Custom:
+                CustomCaptureActivity.start(this, REQUEST_CODE, R.style.XQRCodeTheme_Custom);
                 break;
             case REMOTE:
                 Intent intent = new Intent(XQRCode.ACTION_DEFAULT_CAPTURE);
@@ -178,12 +187,12 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
         XQRCode.analyzeQRCode(PathUtils.getFilePathByUri(getContext(), uri), new QRCodeAnalyzeUtils.AnalyzeCallback() {
             @Override
             public void onAnalyzeSuccess(Bitmap mBitmap, String result) {
-                ToastUtils.toast("解析结果:" + result, Toast.LENGTH_LONG);
+                XToastUtils.toast("解析结果:" + result, Toast.LENGTH_LONG);
             }
 
             @Override
             public void onAnalyzeFailed() {
-                ToastUtils.toast("解析二维码失败", Toast.LENGTH_LONG);
+                XToastUtils.toast("解析二维码失败", Toast.LENGTH_LONG);
             }
         });
     }
@@ -200,9 +209,9 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
             if (bundle != null) {
                 if (bundle.getInt(XQRCode.RESULT_TYPE) == XQRCode.RESULT_SUCCESS) {
                     String result = bundle.getString(XQRCode.RESULT_DATA);
-                    ToastUtils.toast("解析结果:" + result, Toast.LENGTH_LONG);
+                    XToastUtils.toast("解析结果:" + result, Toast.LENGTH_LONG);
                 } else if (bundle.getInt(XQRCode.RESULT_TYPE) == XQRCode.RESULT_FAILED) {
-                    ToastUtils.toast("解析二维码失败", Toast.LENGTH_LONG);
+                    XToastUtils.toast("解析二维码失败", Toast.LENGTH_LONG);
                 }
             }
         }
@@ -210,7 +219,8 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
 
     @Permission(CAMERA)
     private void initPermission() {
-        ToastUtils.toast("相机权限已获取！");
+        XToastUtils.toast("相机权限已获取！");
+        XQRCode.setAutoFocusInterval(800);
     }
 
     /**
@@ -221,6 +231,10 @@ public class XQRCodeFragment extends BaseSimpleListFragment {
          * 默认
          */
         DEFAULT,
+        /**
+         * 默认(修改主题）
+         */
+        DEFAULT_Custom,
         /**
          * 远程
          */

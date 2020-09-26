@@ -19,16 +19,19 @@ package com.xuexiang.xui.widget.imageview.preview.ui;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.CallSuper;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.fragment.app.Fragment;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.utils.ResUtils;
 import com.xuexiang.xui.widget.imageview.photoview.PhotoViewAttacher;
 import com.xuexiang.xui.widget.imageview.preview.MediaLoader;
 import com.xuexiang.xui.widget.imageview.preview.enitity.IPreviewInfo;
@@ -45,6 +48,7 @@ import com.xuexiang.xui.widget.progress.materialprogressbar.MaterialProgressBar;
  * @since 2018/12/5 上午11:24
  */
 public class BasePhotoFragment extends Fragment {
+    private static final String GIF = ".gif";
     /**
      * 预览图片 类型
      */
@@ -53,11 +57,12 @@ public class BasePhotoFragment extends Fragment {
     public static final String KEY_PREVIEW_ITEM = "com.xuexiang.xui.widget.preview.KEY_PREVIEW_ITEM";
     public static final String KEY_DRAG = "com.xuexiang.xui.widget.preview.KEY_DRAG";
     public static final String KEY_SENSITIVITY = "com.xuexiang.xui.widget.preview.KEY_SENSITIVITY";
+    public static final String KEY_PROGRESS_COLOR = "com.xuexiang.xui.widget.preview.KEY_PROGRESS_COLOR";
     private IPreviewInfo mPreviewInfo;
     private boolean isTransPhoto = false;
     protected SmoothImageView mImageView;
     protected View mRootView;
-    protected View mLoadingView;
+    protected MaterialProgressBar mLoadingView;
     protected ISimpleTarget mISimpleTarget;
     protected ImageView mBtnVideo;
     public static OnVideoClickListener listener;
@@ -68,11 +73,24 @@ public class BasePhotoFragment extends Fragment {
         return inflater.inflate(R.layout.preview_fragment_image_photo, container, false);
     }
 
+    /**
+     * 构造方法
+     *
+     * @param fragmentClass   预览fragment的类
+     * @param item            图片预览接口
+     * @param currentIndex    当前索引
+     * @param isSingleFling
+     * @param isDrag          是否可拖拽
+     * @param sensitivity     灵敏度
+     * @param progressColorId 进度条的颜色
+     * @return
+     */
     public static BasePhotoFragment newInstance(Class<? extends BasePhotoFragment> fragmentClass,
                                                 IPreviewInfo item, boolean currentIndex,
                                                 boolean isSingleFling,
                                                 boolean isDrag,
-                                                float sensitivity) {
+                                                float sensitivity,
+                                                int progressColorId) {
         BasePhotoFragment fragment;
         try {
             fragment = fragmentClass.newInstance();
@@ -85,13 +103,14 @@ public class BasePhotoFragment extends Fragment {
         bundle.putBoolean(KEY_SING_FILING, isSingleFling);
         bundle.putBoolean(KEY_DRAG, isDrag);
         bundle.putFloat(KEY_SENSITIVITY, sensitivity);
+        bundle.putInt(KEY_PROGRESS_COLOR, progressColorId);
         fragment.setArguments(bundle);
         return fragment;
     }
 
     @CallSuper
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initView(view);
         initArgs();
@@ -167,6 +186,7 @@ public class BasePhotoFragment extends Fragment {
 
             }
         });
+
         mISimpleTarget = new ISimpleTarget() {
 
             @Override
@@ -200,6 +220,8 @@ public class BasePhotoFragment extends Fragment {
         boolean isSingleFling = true;
         // 非动画进入的Fragment，默认背景为黑色
         if (bundle != null) {
+            int colorId = bundle.getInt(KEY_PROGRESS_COLOR, R.color.xui_config_color_main_theme);
+            mLoadingView.setSupportIndeterminateTintList(ResUtils.getColors(colorId));
             isSingleFling = bundle.getBoolean(KEY_SING_FILING);
             //地址
             mPreviewInfo = bundle.getParcelable(KEY_PREVIEW_ITEM);
@@ -210,7 +232,7 @@ public class BasePhotoFragment extends Fragment {
             mRootView.setTag(mPreviewInfo.getUrl());
             //是否展示动画
             isTransPhoto = bundle.getBoolean(KEY_TRANS_PHOTO, false);
-            if (mPreviewInfo.getUrl().toLowerCase().contains(".gif")) {
+            if (mPreviewInfo.getUrl().toLowerCase().contains(GIF)) {
                 mImageView.setZoomable(false);
                 //加载图
                 MediaLoader.get().displayGifImage(this, mPreviewInfo.getUrl(), mImageView, mISimpleTarget);
@@ -230,7 +252,7 @@ public class BasePhotoFragment extends Fragment {
                 @Override
                 public void onViewTap(View view, float x, float y) {
                     if (mImageView.checkMinScale()) {
-                        ((PreviewActivity) getActivity()).transformOut();
+                        transformOut();
                     }
                 }
             });
@@ -239,7 +261,7 @@ public class BasePhotoFragment extends Fragment {
                 @Override
                 public void onPhotoTap(View view, float x, float y) {
                     if (mImageView.checkMinScale()) {
-                        ((PreviewActivity) getActivity()).transformOut();
+                        transformOut();
                     }
                 }
 
@@ -269,9 +291,16 @@ public class BasePhotoFragment extends Fragment {
         mImageView.setTransformOutListener(new SmoothImageView.OnTransformOutListener() {
             @Override
             public void onTransformOut() {
-                ((PreviewActivity) getActivity()).transformOut();
+                transformOut();
             }
         });
+    }
+
+    private void transformOut() {
+        PreviewActivity activity = ((PreviewActivity) getActivity());
+        if (activity != null) {
+            activity.transformOut();
+        }
     }
 
     public static int getColorWithAlpha(float alpha, int baseColor) {

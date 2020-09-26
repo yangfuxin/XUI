@@ -25,8 +25,10 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,7 +44,7 @@ import com.xuexiang.xui.widget.dialog.materialdialog.StackingBehavior;
 
 /**
  * @author Kevin Barry (teslacoil) 4/02/2015 This is the top level view for all MaterialDialogs It
- *         handles the layout of: titleFrame (md_stub_titleframe) content (text, custom view, listview,
+ *         handles the layout of: titleFrame (md_layout_stub_titleframe) content (text, custom view, listview,
  *         etc) buttonDefault... (either stacked or horizontal)
  */
 public class MDRootLayout extends ViewGroup {
@@ -190,10 +192,6 @@ public class MDRootLayout extends ViewGroup {
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
-        if (isInEditMode()) {
-            return;
-        }
-
         Resources r = context.getResources();
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.MDRootLayout, defStyleAttr, 0);
@@ -486,6 +484,8 @@ public class MDRootLayout extends ViewGroup {
                 case END:
                     buttonGravity = GravityEnum.START;
                     break;
+                default:
+                    break;
             }
         }
     }
@@ -578,7 +578,7 @@ public class MDRootLayout extends ViewGroup {
                 RecyclerView.OnScrollListener scrollListener =
                         new RecyclerView.OnScrollListener() {
                             @Override
-                            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                                 super.onScrolled(recyclerView, dx, dy);
                                 boolean hasButtons = false;
                                 for (MDButton button : buttons) {

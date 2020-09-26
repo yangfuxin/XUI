@@ -21,13 +21,15 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.Px;
-import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.Px;
+import androidx.annotation.RequiresApi;
+
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.widget.textview.badge.Badge;
 import com.xuexiang.xui.widget.textview.badge.BadgeView;
@@ -142,6 +144,7 @@ public class XTabView extends TabView {
         mTitle.setText(mTabTitle.getContent());
         mTitle.setGravity(Gravity.CENTER);
         mTitle.setEllipsize(TextUtils.TruncateAt.END);
+        mTitle.setTypeface(XUI.getDefaultTypeface());
         refreshDrawablePadding();
     }
 
@@ -166,6 +169,8 @@ public class XTabView extends TabView {
                 break;
             case Gravity.BOTTOM:
                 mTitle.setCompoundDrawables(null, null, null, drawable);
+                break;
+            default:
                 break;
         }
         refreshDrawablePadding();

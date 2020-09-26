@@ -16,7 +16,8 @@
 
 package com.xuexiang.xuidemo.adapter;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,7 @@ public class CommonRecyclerViewAdapter extends RecyclerView.Adapter<CommonRecycl
     }
 
     public static List<Data> generateDatas(int count) {
-        ArrayList<Data> mDatas = new ArrayList<>();
+        List<Data> mDatas = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             mDatas.add(new Data(String.valueOf(i)));
         }
@@ -52,19 +53,23 @@ public class CommonRecyclerViewAdapter extends RecyclerView.Adapter<CommonRecycl
     }
 
     public void addItem(int position) {
-        if (position > mItems.size()) return;
+        if (position > mItems.size()) {
+            return;
+        }
 
         mItems.add(position, new Data(String.valueOf(position)));
         notifyItemInserted(position);
     }
 
     public void removeItem(int position) {
-        if (position >= mItems.size()) return;
-
+        if (position >= mItems.size()) {
+            return;
+        }
         mItems.remove(position);
         notifyItemRemoved(position);
     }
 
+    @NonNull
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
@@ -120,7 +125,7 @@ public class CommonRecyclerViewAdapter extends RecyclerView.Adapter<CommonRecycl
 
             mAdapter = adapter;
 
-            mTextView = (TextView) itemView.findViewById(R.id.textView);
+            mTextView = itemView.findViewById(R.id.textView);
         }
 
         public void setText(String text) {

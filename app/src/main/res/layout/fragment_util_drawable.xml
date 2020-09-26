@@ -19,7 +19,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/contentWrap"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -35,7 +35,7 @@
                 style="@style/TextStyle.Content.wrap"
                 android:text="@string/drawable_utils_solid_image_title" />
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/solidImage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
                 style="@style/TextStyle.Content.wrap"
                 android:text="@string/drawable_utils_circle_gradient_title" />
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/circleGradient"
                 android:layout_width="@dimen/drawable_utils_common_shape_size"
                 android:layout_height="@dimen/drawable_utils_common_shape_size"
@@ -66,24 +66,24 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
+                <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/tintColorOrigin"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/common_example" />
 
-                <ImageView
+                <androidx.appcompat.widget.AppCompatImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/color_utils_square_margin"
+                    android:layout_marginStart="@dimen/color_utils_square_margin"
                     android:contentDescription="@null"
                     android:src="@drawable/icon_arrow_right" />
 
-                <ImageView
+                <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/tintColor"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/color_utils_square_margin"
+                    android:layout_marginStart="@dimen/color_utils_square_margin"
                     android:contentDescription="@string/common_example" />
 
             </LinearLayout>
@@ -104,13 +104,20 @@
                 style="@style/TextStyle.Content.wrap"
                 android:text="@string/drawable_utils_create_from_view_title" />
 
-            <Button
+            <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                 android:id="@+id/createFromView"
-                style="@style/Button.Blue.wrap"
+                style="@style/Button.Primary.wrap"
                 android:layout_width="wrap_content"
                 android:text="@string/drawable_utils_create_from_view_button" />
 
+            <com.xuexiang.xui.widget.alpha.XUIAlphaButton
+                android:id="@+id/createFromView1"
+                style="@style/Button.Primary.wrap"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="截取scrollview长图" />
+
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

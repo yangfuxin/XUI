@@ -23,11 +23,11 @@ import android.content.res.ColorStateList;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.widget.AppCompatEditText;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.appcompat.widget.AppCompatEditText;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -207,8 +207,12 @@ public class MDTintHelper {
             Drawable[] drawables = new Drawable[2];
             drawables[0] = ContextCompat.getDrawable(editText.getContext(), mCursorDrawableRes);
             drawables[1] = ContextCompat.getDrawable(editText.getContext(), mCursorDrawableRes);
-            drawables[0].setColorFilter(color, PorterDuff.Mode.SRC_IN);
-            drawables[1].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            if (drawables[0] != null) {
+                drawables[0].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            }
+            if (drawables[1] != null) {
+                drawables[1].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            }
             fCursorDrawable.set(editor, drawables);
         } catch (NoSuchFieldException e1) {
             Log.d("MDTintHelper", "Device issue with cursor tinting: " + e1.getMessage());

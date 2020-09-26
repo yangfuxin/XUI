@@ -5,11 +5,6 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.content.res.AppCompatResources;
-import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Gravity;
@@ -28,6 +23,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.content.ContextCompat;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.logs.UILog;
@@ -54,7 +55,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  */
 public class BottomSheet extends Dialog {
     // 动画时长
-    private final static int mAnimationDuration = 200;
+    private final static int ANIMATION_DURATION = 200;
     // 持有 ContentView，为了做动画
     private View mContentView;
     private boolean mIsAnimating = false;
@@ -83,14 +84,14 @@ public class BottomSheet extends Dialog {
 
         int screenWidth = Utils.getScreenWidth(getContext());
         int screenHeight = Utils.getScreenHeight(getContext());
-        params.width = screenWidth < screenHeight ? screenWidth : screenHeight;
+        params.width = Math.min(screenWidth, screenHeight);
         getWindow().setAttributes(params);
         setCanceledOnTouchOutside(true);
     }
 
     @Override
-    public void setContentView(int layoutResID) {
-        mContentView = LayoutInflater.from(getContext()).inflate(layoutResID, null);
+    public void setContentView(int layoutResId) {
+        mContentView = LayoutInflater.from(getContext()).inflate(layoutResId, null);
         super.setContentView(mContentView);
     }
 
@@ -126,7 +127,7 @@ public class BottomSheet extends Dialog {
         set.addAnimation(translate);
         set.addAnimation(alpha);
         set.setInterpolator(new DecelerateInterpolator());
-        set.setDuration(mAnimationDuration);
+        set.setDuration(ANIMATION_DURATION);
         set.setFillAfter(true);
         mContentView.startAnimation(set);
     }
@@ -147,7 +148,7 @@ public class BottomSheet extends Dialog {
         set.addAnimation(translate);
         set.addAnimation(alpha);
         set.setInterpolator(new DecelerateInterpolator());
-        set.setDuration(mAnimationDuration);
+        set.setDuration(ANIMATION_DURATION);
         set.setFillAfter(true);
         set.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -596,8 +597,6 @@ public class BottomSheet extends Dialog {
         private int mMiniItemWidth = -1;
         private OnSheetItemClickListener mOnSheetItemClickListener;
         private Typeface mItemTextTypeFace = null;
-        private ViewGroup mBottomButtonContainer;
-        private TextView mBottomButton;
         private Typeface mBottomButtonTypeFace = null;
         private boolean mIsShowButton = true;
         private CharSequence mButtonText = null;
@@ -725,13 +724,13 @@ public class BottomSheet extends Dialog {
             baseLinearLayout = (LinearLayout) View.inflate(mContext, getContentViewLayoutId(), null);
             LinearLayout firstLine = baseLinearLayout.findViewById(R.id.bottom_sheet_first_linear_layout);
             LinearLayout secondLine = baseLinearLayout.findViewById(R.id.bottom_sheet_second_linear_layout);
-            mBottomButtonContainer = baseLinearLayout.findViewById(R.id.bottom_sheet_button_container);
-            mBottomButton = baseLinearLayout.findViewById(R.id.bottom_sheet_close_button);
+            ViewGroup mBottomButtonContainer = baseLinearLayout.findViewById(R.id.bottom_sheet_button_container);
+            TextView mBottomButton = baseLinearLayout.findViewById(R.id.bottom_sheet_close_button);
 
             int maxItemCountEachLine = Math.max(mFirstLineViews.size(), mSecondLineViews.size());
             int screenWidth = Utils.getScreenWidth(mContext);
             int screenHeight = Utils.getScreenHeight(mContext);
-            int width = screenWidth < screenHeight ? screenWidth : screenHeight;
+            int width = Math.min(screenWidth, screenHeight);
             int itemWidth = calculateItemWidth(width, maxItemCountEachLine, firstLine.getPaddingLeft(), firstLine.getPaddingRight());
 
             addViewsInSection(mFirstLineViews, firstLine, itemWidth);

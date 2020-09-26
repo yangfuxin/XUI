@@ -1,8 +1,10 @@
 package com.xuexiang.xuidemo.base;
 
 import android.content.Context;
-import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 
 import com.jpeng.jptabbar.anno.NorIcons;
 import com.jpeng.jptabbar.anno.SeleIcons;
@@ -10,13 +12,14 @@ import com.jpeng.jptabbar.anno.Titles;
 import com.xuexiang.xpage.base.XPageActivity;
 import com.xuexiang.xpage.base.XPageFragment;
 import com.xuexiang.xpage.core.CoreSwitchBean;
-import com.xuexiang.xpage.logger.PageLog;
-import com.xuexiang.xui.XUI;
+import com.xuexiang.xui.utils.ResUtils;
+import com.xuexiang.xui.widget.slideback.SlideBack;
 import com.xuexiang.xuidemo.R;
+import com.xuexiang.xuidemo.utils.Utils;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+import io.github.inflationx.viewpump.ViewPumpContextWrapper;
 
 /**
  * 基础容器Activity
@@ -30,65 +33,46 @@ public class BaseActivity extends XPageActivity {
     @Titles
     public static final int[] mTitles = {R.string.tab1, R.string.tab2, R.string.tab3, R.string.tab4};
     @SeleIcons
-    private static final int[] mSeleIcons = {R.drawable.nav_01_pre, R.drawable.nav_02_pre, R.drawable.nav_04_pre, R.drawable.nav_05_pre};
+    public static final int[] mSelectIcons = {R.drawable.nav_01_pre, R.drawable.nav_02_pre, R.drawable.nav_04_pre, R.drawable.nav_05_pre};
     @NorIcons
-    private static final int[] mNormalIcons = {R.drawable.nav_01_nor, R.drawable.nav_02_nor, R.drawable.nav_04_nor, R.drawable.nav_05_nor};
+    public static final int[] mNormalIcons = {R.drawable.nav_01_nor, R.drawable.nav_02_nor, R.drawable.nav_04_nor, R.drawable.nav_05_nor};
+
+    //============================================================================================================================================================//
+    /**
+     * 是否支持侧滑返回
+     */
+    public static final String KEY_SUPPORT_SLIDE_BACK = "key_support_slide_back";
 
     Unbinder mUnbinder;
 
     @Override
     protected void attachBaseContext(Context newBase) {
         //注入字体
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+        super.attachBaseContext(ViewPumpContextWrapper.wrap(newBase));
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        XUI.initTheme(this);
+        initAppTheme();
+        initStatusBarStyle();
         super.onCreate(savedInstanceState);
         mUnbinder = ButterKnife.bind(this);
+
+        registerSlideBack();
     }
 
     /**
-     * 根据SwitchPage打开activity
-     *
-     * @param page CoreSwitchBean对象
+     * 初始化应用的主题
      */
-    @Override
-    public void startActivity(CoreSwitchBean page) {
-        try {
-            Intent intent = new Intent(this, BaseActivity.class);
-            intent.putExtra(CoreSwitchBean.KEY_SWITCH_BEAN, page);
-
-            this.startActivity(intent);
-            int[] animations = page.getAnim();
-            if (animations != null && animations.length >= 2) {
-                overridePendingTransition(animations[0], animations[1]);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            PageLog.e(e);
-        }
+    protected void initAppTheme() {
+        Utils.initTheme(this);
     }
 
     /**
-     * @param page CoreSwitchBean对象
+     * 初始化状态栏的样式
      */
-    @Override
-    public void startActivityForResult(CoreSwitchBean page) {
-        try {
-            Intent intent = new Intent(this, BaseActivity.class);
-            intent.putExtra(CoreSwitchBean.KEY_SWITCH_BEAN, page);
-            intent.putExtra(CoreSwitchBean.KEY_START_ACTIVITY_FOR_RESULT, true);
-            this.startActivityForResult(intent, page.getRequestCode());
+    protected void initStatusBarStyle() {
 
-            int[] animations = page.getAnim();
-            if (animations != null && animations.length >= 2) {
-                this.overridePendingTransition(animations[0], animations[1]);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -123,14 +107,54 @@ public class BaseActivity extends XPageActivity {
      * @return 打开的fragment对象
      */
     public <T extends XPageFragment> T switchPage(Class<T> clazz) {
-//        changePage(clazz);
-        return openPage(clazz, false);
+        return changePage(clazz);
     }
 
     @Override
     protected void onRelease() {
         mUnbinder.unbind();
+        unregisterSlideBack();
         super.onRelease();
     }
 
+    /**
+     * @return 是否支持侧滑返回
+     */
+    protected boolean isSupportSlideBack() {
+        CoreSwitchBean page = getIntent().getParcelableExtra(CoreSwitchBean.KEY_SWITCH_BEAN);
+        return page == null || page.getBundle() == null || page.getBundle().getBoolean(KEY_SUPPORT_SLIDE_BACK, true);
+    }
+
+    /**
+     * 注册侧滑回调
+     */
+    protected void registerSlideBack() {
+        if (isSupportSlideBack()) {
+            SlideBack.with(this)
+                    .haveScroll(true)
+                    .edgeMode(ResUtils.isRtl() ? SlideBack.EDGE_RIGHT : SlideBack.EDGE_LEFT)
+                    .callBack(this::popPage)
+                    .register();
+        }
+    }
+
+    /**
+     * 注销侧滑回调
+     */
+    protected void unregisterSlideBack() {
+        if (isSupportSlideBack()) {
+            SlideBack.unregister(this);
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        resetSlideBack();
+    }
+
+    private void resetSlideBack() {
+        unregisterSlideBack();
+        registerSlideBack();
+    }
 }

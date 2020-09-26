@@ -18,26 +18,33 @@ package com.xuexiang.xui.widget.tabbar;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.utils.ResUtils;
+import com.xuexiang.xui.utils.ThemeUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.github.inflationx.calligraphy3.HasTypeface;
 
 import static android.os.Build.VERSION_CODES.JELLY_BEAN;
 
@@ -47,12 +54,12 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN;
  * @author xuexiang
  * @since 2019/1/14 下午10:03
  */
-public class TabControlView extends RadioGroup {
+public class TabControlView extends RadioGroup implements HasTypeface {
 
     private Context mContext;
 
     /**
-     *
+     * Tab选中的监听
      */
     private OnTabSelectionChangedListener mListener;
 
@@ -64,6 +71,18 @@ public class TabControlView extends RadioGroup {
      * 边框宽度
      */
     private int mStrokeWidth;
+    /**
+     * 选项间距
+     */
+    private int mItemPadding;
+    /**
+     * 选项水平间距
+     */
+    private int mItemPaddingHorizontal;
+    /**
+     * 选项垂直间距
+     */
+    private int mItemPaddingVertical;
     /**
      * 选中背景的颜色
      */
@@ -95,6 +114,7 @@ public class TabControlView extends RadioGroup {
     private ColorStateList mTextColorStateList;
 
     //Item organization
+
     private LinkedHashMap<String, String> mItemMap = new LinkedHashMap<>();
     private List<RadioButton> mOptions;
     /**
@@ -130,21 +150,21 @@ public class TabControlView extends RadioGroup {
     }
 
     private void initAttrs(Context context, AttributeSet attrs) throws Exception {
-        if (isInEditMode()) {
-            return;
-        }
-
         TypedArray attributes = context.getTheme().obtainStyledAttributes(
                 attrs,
                 R.styleable.TabControlView,
                 0, 0);
         try {
             mTextSize = attributes.getDimensionPixelSize(R.styleable.TabControlView_tcv_textSize, ResUtils.getDimensionPixelSize(R.dimen.default_tcv_text_size));
-            mSelectedColor = attributes.getColor(R.styleable.TabControlView_tcv_selectedColor, ResUtils.getColor(R.color.xui_config_color_main_theme));
+            mSelectedColor = attributes.getColor(R.styleable.TabControlView_tcv_selectedColor, ThemeUtils.resolveColor(context, R.attr.colorAccent));
             mUnselectedColor = attributes.getColor(R.styleable.TabControlView_tcv_unselectedColor, Color.TRANSPARENT);
             mSelectedTextColor = attributes.getColor(R.styleable.TabControlView_tcv_selectedTextColor, Color.WHITE);
-            mUnselectedTextColor = attributes.getColor(R.styleable.TabControlView_tcv_unselectedTextColor, ResUtils.getColor(R.color.xui_config_color_main_theme));
+            mUnselectedTextColor = attributes.getColor(R.styleable.TabControlView_tcv_unselectedTextColor, ThemeUtils.resolveColor(context, R.attr.colorAccent));
             mStrokeWidth = attributes.getDimensionPixelSize(R.styleable.TabControlView_tcv_strokeWidth, ResUtils.getDimensionPixelSize(R.dimen.default_tcv_stroke_width));
+            mItemPadding = attributes.getDimensionPixelSize(R.styleable.TabControlView_tcv_item_padding, -1);
+            mItemPaddingHorizontal = attributes.getDimensionPixelSize(R.styleable.TabControlView_tcv_item_padding_horizontal, -1);
+            mItemPaddingVertical = attributes.getDimensionPixelSize(R.styleable.TabControlView_tcv_item_padding_vertical, -1);
+
             //Set text mSelectedColor state list
             mTextColorStateList = new ColorStateList(new int[][]{
                     {-android.R.attr.state_checked}, {android.R.attr.state_checked}},
@@ -167,7 +187,6 @@ public class TabControlView extends RadioGroup {
 
     private void init(Context context) {
         mContext = context;
-        //Needed for calling the right "setbackground" method
         //Provide a tad bit of padding for the view
         setPadding(10, 10, 10, 10);
     }
@@ -198,7 +217,7 @@ public class TabControlView extends RadioGroup {
                 params.weight = 1.0F;
             }
             if (i > 0) {
-                params.setMargins(-mStrokeWidth, 0, 0, 0);
+                params.setMarginStart(-mStrokeWidth);
             }
 
             rb.setLayoutParams(params);
@@ -209,19 +228,34 @@ public class TabControlView extends RadioGroup {
             //Create state list for background
             if (i == 0) {
                 //Left
-                updateRadioButton(rb, R.drawable.tcv_left_option, R.drawable.tcv_left_option_selected);
+                if (isRtl()) {
+                    updateRadioButton(rb, R.drawable.tcv_right_option, R.drawable.tcv_right_option_selected);
+                } else {
+                    updateRadioButton(rb, R.drawable.tcv_left_option, R.drawable.tcv_left_option_selected);
+                }
             } else if (i == (mItemMap.size() - 1)) {
                 //Right
-                updateRadioButton(rb, R.drawable.tcv_right_option, R.drawable.tcv_right_option_selected);
+                if (isRtl()) {
+                    updateRadioButton(rb, R.drawable.tcv_left_option, R.drawable.tcv_left_option_selected);
+                } else {
+                    updateRadioButton(rb, R.drawable.tcv_right_option, R.drawable.tcv_right_option_selected);
+                }
             } else {
                 //Middle
                 updateRadioButton(rb, R.drawable.tcv_middle_option, R.drawable.tcv_middle_option_selected);
             }
 
             rb.setLayoutParams(params);
+            if (mItemPadding != -1) {
+                rb.setPadding(mItemPadding, mItemPadding, mItemPadding, mItemPadding);
+            }
+            if (mItemPaddingHorizontal != -1 && mItemPaddingVertical != -1) {
+                rb.setPadding(mItemPaddingHorizontal, mItemPaddingVertical, mItemPaddingHorizontal, mItemPaddingVertical);
+            }
             rb.setMinWidth(mStrokeWidth * 10);
             rb.setGravity(Gravity.CENTER);
             rb.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTextSize);
+            rb.setTypeface(XUI.getDefaultTypeface());
             rb.setText(item.getKey());
             textWidth = Math.max(rb.getPaint().measureText(item.getKey()), textWidth);
             mOptions.add(rb);
@@ -245,6 +279,11 @@ public class TabControlView extends RadioGroup {
                 this.check(radioButton.getId());
             }
         }
+    }
+
+    private boolean isRtl() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 &&
+                getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
     }
 
     /**
@@ -309,7 +348,6 @@ public class TabControlView extends RadioGroup {
      *
      * @param itemArray
      * @param valueArray
-     * @throws Exception
      */
     public TabControlView setItems(String[] itemArray, String[] valueArray) throws Exception {
         mItemMap.clear();
@@ -333,6 +371,12 @@ public class TabControlView extends RadioGroup {
         return this;
     }
 
+    /**
+     * 为每一个选项设置 items and values
+     *
+     * @param itemArray
+     * @param valueArray
+     */
     private void setItems(CharSequence[] itemArray, CharSequence[] valueArray) throws Exception {
         if (itemArray != null && valueArray != null) {
             if (itemArray.length != valueArray.length) {
@@ -358,7 +402,6 @@ public class TabControlView extends RadioGroup {
      * @param items
      * @param values
      * @param defaultSelection
-     * @throws Exception
      */
     public TabControlView setItems(String[] items, String[] values, int defaultSelection) throws Exception {
         if (defaultSelection > (items.length - 1)) {
@@ -371,10 +414,10 @@ public class TabControlView extends RadioGroup {
     }
 
     /**
-     * 设置默认选中的Tab.
+     * 设置默认选中的Tab
      *
      * @param defaultSelection
-     * @throws Exception
+     * @return
      */
     public TabControlView setDefaultSelection(int defaultSelection) throws Exception {
         if (defaultSelection > (mItemMap.size() - 1)) {
@@ -392,22 +435,66 @@ public class TabControlView extends RadioGroup {
      * @param value
      */
     public TabControlView setSelection(String value) {
-        String buttonText = "";
-        if (mItemMap.containsValue(value)) {
-            for (String entry : mItemMap.keySet()) {
-                if (mItemMap.get(entry).equalsIgnoreCase(value)) {
-                    buttonText = entry;
-                }
-            }
-        }
+        setSelection(value, true);
+        return this;
+    }
+
+    /**
+     * 通过值 设置选中的Tab
+     *
+     * @param value
+     */
+    public TabControlView setSelection(String value, boolean isSilent) {
+        String title = getTitleByValue(value);
+        setSelectionTitle(title, isSilent);
+        return this;
+    }
+
+    /**
+     * 通过标题设置选中的Tab
+     *
+     * @param title
+     * @return
+     */
+    public TabControlView setSelectionTitle(String title) {
+        setSelectionTitle(title, true);
+        return this;
+    }
+
+    /**
+     * 通过标题设置选中的Tab
+     *
+     * @param title
+     * @param isSilent 是否静默设置
+     * @return
+     */
+    public TabControlView setSelectionTitle(String title, boolean isSilent) {
         for (RadioButton option : mOptions) {
-            if (option.getText().toString().equalsIgnoreCase(buttonText)) {
-                this.check(option.getId());
+            if (option.getText().toString().equalsIgnoreCase(title)) {
+                if (isSilent) {
+                    setOnCheckedChangeListener(null);
+                    this.check(option.getId());
+                    setOnCheckedChangeListener(mSelectionChangedListener);
+                } else {
+                    this.check(option.getId());
+                }
             }
         }
         return this;
     }
 
+    private String getTitleByValue(String value) {
+        if (mItemMap.containsValue(value)) {
+            String title;
+            for (String key : mItemMap.keySet()) {
+                title = mItemMap.get(key);
+                if (title != null && title.equalsIgnoreCase(value)) {
+                    return key;
+                }
+            }
+        }
+        return "";
+    }
 
     /**
      * Sets the colors used when drawing the view. The primary color will be used for selected color
@@ -489,6 +576,21 @@ public class TabControlView extends RadioGroup {
         return this;
     }
 
+    @Override
+    public void setTypeface(Typeface typeface) {
+        if (mOptions != null) {
+            for (int i = 0; i < mOptions.size(); i++) {
+                mOptions.get(i).setTypeface(typeface);
+            }
+        }
+    }
+
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        update();
+    }
+
     /**
      * Tab选中的监听
      */
@@ -497,7 +599,7 @@ public class TabControlView extends RadioGroup {
          * 选中
          *
          * @param title 选中展示的内容
-         * @param value      选中的值
+         * @param value 选中的值
          */
         void newSelection(String title, String value);
     }

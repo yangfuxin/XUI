@@ -19,7 +19,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/contentWrap"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -61,7 +61,7 @@
 
                 </LinearLayout>
 
-                <ImageView
+                <androidx.appcompat.widget.AppCompatImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/color_utils_square_margin"
@@ -116,8 +116,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:max="100"
-                    android:paddingLeft="20dp"
-                    android:paddingRight="20dp" />
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp" />
 
                 <View
                     android:layout_width="@dimen/color_utils_square_length"
@@ -142,7 +142,7 @@
                     android:id="@+id/transformTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/xui_config_color_main_theme" />
+                    android:textColor="?attr/colorAccent" />
             </LinearLayout>
 
             <!-- 获取随机颜色 -->
@@ -172,6 +172,6 @@
 
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

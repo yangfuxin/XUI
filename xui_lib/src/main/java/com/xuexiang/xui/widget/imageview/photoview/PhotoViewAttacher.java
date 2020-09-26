@@ -22,8 +22,10 @@ import android.graphics.Matrix;
 import android.graphics.Matrix.ScaleToFit;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.Nullable;
-import android.support.v4.view.MotionEventCompat;
+
+import androidx.annotation.Nullable;
+import androidx.core.view.MotionEventCompat;
+
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -166,15 +168,13 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
         imageView.setOnTouchListener(this);
 
         ViewTreeObserver observer = imageView.getViewTreeObserver();
-        if (null != observer)
+        if (null != observer) {
             observer.addOnGlobalLayoutListener(this);
+        }
 
         // Make sure we using MATRIX Scale Type
         setImageViewScaleTypeMatrix(imageView);
 
-        if (imageView.isInEditMode()) {
-            return;
-        }
         // Create Gesture Detectors...
         mScaleDragDetector = VersionedGestureDetector.newInstance(
                 imageView.getContext(), this);
@@ -242,8 +242,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
     /**
      * Clean-up the resources attached to this object. This needs to be called when the ImageView is
-     * no longer used. A good example is from {@link View#onDetachedFromWindow()} or
-     * from {@link android.app.Activity#onDestroy()}. This is automatically called if you are using
+     * no longer used. This is automatically called if you are using
      * {@link com.xuexiang.xui.widget.imageview.photoview}.
      */
     @SuppressWarnings("deprecation")
@@ -268,7 +267,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
             cancelFling();
         }
 
-        if (null != mGestureDetector) {
+        if (mGestureDetector != null) {
             mGestureDetector.setOnDoubleTapListener(null);
         }
 
@@ -276,7 +275,9 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
         mMatrixChangeListener = null;
         mPhotoTapListener = null;
         mViewTapListener = null;
-
+        mLongClickListener = null;
+        mScaleChangeListener = null;
+        mSingleFlingListener = null;
         // Finally, clear ImageView
         mImageView = null;
     }
@@ -613,8 +614,8 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
         if (null != imageView) {
             setScale(scale,
-                    (imageView.getRight()) / 2,
-                    (imageView.getBottom()) / 2,
+                    (imageView.getRight()) / 2F,
+                    (imageView.getBottom()) / 2F,
                     animate);
         }
     }
@@ -825,6 +826,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
         return null;
     }
 
+    @Override
     public Bitmap getVisibleRectangleBitmap() {
         ImageView imageView = getImageView();
         return imageView == null ? null : imageView.getDrawingCache();
@@ -832,8 +834,9 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
 
     @Override
     public void setZoomTransitionDuration(int milliseconds) {
-        if (milliseconds < 0)
+        if (milliseconds < 0) {
             milliseconds = DEFAULT_ZOOM_DURATION;
+        }
         this.ZOOM_DURATION = milliseconds;
     }
 
@@ -953,14 +956,16 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener,
     }
 
     private int getImageViewWidth(ImageView imageView) {
-        if (null == imageView)
+        if (null == imageView) {
             return 0;
+        }
         return imageView.getWidth() - imageView.getPaddingLeft() - imageView.getPaddingRight();
     }
 
     private int getImageViewHeight(ImageView imageView) {
-        if (null == imageView)
+        if (null == imageView) {
             return 0;
+        }
         return imageView.getHeight() - imageView.getPaddingTop() - imageView.getPaddingBottom();
     }
 

@@ -3,8 +3,6 @@ package com.xuexiang.xui.widget.spinner.editspinner;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -12,7 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+
 import com.xuexiang.xui.R;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -86,7 +89,7 @@ public class EditSpinnerAdapter extends BaseEditSpinnerAdapter implements EditSp
         final TextView textView;
         if (convertView == null) {
             LayoutInflater inflater = LayoutInflater.from(mContext);
-            convertView = inflater.inflate(R.layout.ms_list_item, parent, false);
+            convertView = inflater.inflate(R.layout.ms_layout_list_item, parent, false);
             textView = convertView.findViewById(R.id.tv_tinted_spinner);
             textView.setTextColor(textColor);
             textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);

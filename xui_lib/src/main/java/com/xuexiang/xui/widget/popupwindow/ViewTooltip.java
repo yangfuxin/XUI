@@ -20,6 +20,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.utils.ThemeUtils;
 
 /**
@@ -324,7 +325,6 @@ public class ViewTooltip {
 
         private static final int MARGIN_SCREEN_BORDER_TOOLTIP = 30;
         private final int ARROW_HEIGHT = 15;
-        private final int ARROW_WIDTH = 15;
         protected View mChildView;
         private int mBubbleColor = Color.parseColor("#B2299EE3");
         private Path mBubblePath;
@@ -365,6 +365,8 @@ public class ViewTooltip {
 
             mPaddingTop = mPaddingBottom = ThemeUtils.resolveDimension(getContext(), R.attr.xui_tip_popup_padding_top);
             mPaddingRight = mPaddingLeft = ThemeUtils.resolveDimension(getContext(), R.attr.xui_tip_popup_padding_left);
+
+            setTextTypeFace(XUI.getDefaultTypeface());
         }
 
         public void setCustomView(View customView) {
@@ -383,16 +385,18 @@ public class ViewTooltip {
             mPosition = position;
             switch (position) {
                 case TOP:
-                    setPadding(mPaddingLeft, mPaddingTop, mPaddingRight, mPaddingBottom + ARROW_HEIGHT);
+                    setPaddingRelative(mPaddingLeft, mPaddingTop, mPaddingRight, mPaddingBottom + ARROW_HEIGHT);
                     break;
                 case BOTTOM:
-                    setPadding(mPaddingLeft, mPaddingTop + ARROW_HEIGHT, mPaddingRight, mPaddingBottom);
+                    setPaddingRelative(mPaddingLeft, mPaddingTop + ARROW_HEIGHT, mPaddingRight, mPaddingBottom);
                     break;
                 case LEFT:
-                    setPadding(mPaddingLeft, mPaddingTop, mPaddingRight + ARROW_HEIGHT, mPaddingBottom);
+                    setPaddingRelative(mPaddingLeft, mPaddingTop, mPaddingRight + ARROW_HEIGHT, mPaddingBottom);
                     break;
                 case RIGHT:
-                    setPadding(mPaddingLeft + ARROW_HEIGHT, mPaddingTop, mPaddingRight, mPaddingBottom);
+                    setPaddingRelative(mPaddingLeft + ARROW_HEIGHT, mPaddingTop, mPaddingRight, mPaddingBottom);
+                    break;
+                default:
                     break;
             }
             postInvalidate();
@@ -564,6 +568,8 @@ public class ViewTooltip {
                     case CENTER:
                         spacingY = (int) (-1f * maxHeight / 2f + minHeight / 2f);
                         break;
+                    default:
+                        break;
                 }
 
                 if (mPosition == Position.LEFT) {
@@ -630,6 +636,7 @@ public class ViewTooltip {
             path.moveTo(left + topLeftDiameter / 2f, top);
             //LEFT, TOP
 
+            int ARROW_WIDTH = 15;
             if (mPosition == Position.BOTTOM) {
                 path.lineTo(centerX - ARROW_WIDTH, top);
                 path.lineTo(centerX, myRect.top);
@@ -734,5 +741,6 @@ public class ViewTooltip {
         public void close() {
             remove();
         }
+
     }
 }

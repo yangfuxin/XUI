@@ -7,7 +7,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 
 import com.xuexiang.xui.R;
@@ -108,7 +108,7 @@ public class RoundDrawable extends GradientDrawable {
         super.onBoundsChange(r);
         if (mRadiusAdjustBounds) {
             // 修改圆角为短边的一半
-            setCornerRadius(Math.min(r.width(), r.height()) / 2);
+            setCornerRadius(Math.min(r.width(), r.height()) / 2F);
         }
     }
 
@@ -122,9 +122,9 @@ public class RoundDrawable extends GradientDrawable {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.RoundButton);
         ColorStateList colorBg = typedArray.getColorStateList(R.styleable.RoundButton_rb_backgroundColor);
         ColorStateList colorBorder = typedArray.getColorStateList(R.styleable.RoundButton_rb_borderColor);
-        int borderWidth = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_borderWidth, ResUtils.getDimensionPixelOffset(R.dimen.default_rb_border_width));
+        int borderWidth = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_borderWidth, ResUtils.getDimensionPixelSize(R.dimen.default_rb_border_width));
         boolean isRadiusAdjustBounds = typedArray.getBoolean(R.styleable.RoundButton_rb_isRadiusAdjustBounds, false);
-        int mRadius = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_radius, ResUtils.getDimensionPixelOffset(R.dimen.default_rb_radius));
+        int mRadius = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_radius, ResUtils.getDimensionPixelSize(R.dimen.default_rb_radius));
         int mRadiusTopLeft = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_radiusTopLeft, 0);
         int mRadiusTopRight = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_radiusTopRight, 0);
         int mRadiusBottomLeft = typedArray.getDimensionPixelSize(R.styleable.RoundButton_rb_radiusBottomLeft, 0);

@@ -3,7 +3,10 @@ package com.xuexiang.xui.widget.flowlayout;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.DataSetObserver;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import android.util.AttributeSet;
 import android.util.SparseBooleanArray;
 import android.view.View;
@@ -14,6 +17,7 @@ import com.xuexiang.xui.utils.ResUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,6 +68,10 @@ public class FlowTagLayout extends ViewGroup {
      * 标签流式布局选中模式，默认是不支持选中的
      */
     private int mTagCheckMode = FLOW_TAG_CHECKED_NONE;
+    /**
+     * 单选模式下点击是否可取消选中,默认为false不可取消
+     */
+    private boolean mSingleCancelable;
 
     /**
      * 存储选中的tag
@@ -73,9 +81,6 @@ public class FlowTagLayout extends ViewGroup {
      * 子View的宽度，如果为0 则为warp_content
      */
     private int mWidth;
-
-    private List<Integer> mSelectedIndexs;
-
 
     public FlowTagLayout(Context context) {
         super(context);
@@ -92,25 +97,30 @@ public class FlowTagLayout extends ViewGroup {
     }
 
     private void initAttrs(Context context, AttributeSet attrs) {
-        if (isInEditMode()) {
-            return;
-        }
-
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.FlowTagLayout);
-        if (typedArray != null) {
-            mTagCheckMode = typedArray.getInt(R.styleable.FlowTagLayout_ftl_check_mode, FLOW_TAG_CHECKED_NONE);
-            int entriesID = typedArray.getResourceId(R.styleable.FlowTagLayout_ftl_entries, 0);
-            if (entriesID != 0) {
-                BaseTagAdapter tagAdapter = setItems(ResUtils.getStringArray(entriesID));
-                int selectedIDs = typedArray.getResourceId(R.styleable.FlowTagLayout_ftl_selecteds, 0);
-                if (selectedIDs != 0) {
-                    tagAdapter.setSelectedPositions(ResUtils.getIntArray(selectedIDs));
-                }
+        mTagCheckMode = typedArray.getInt(R.styleable.FlowTagLayout_ftl_check_mode, FLOW_TAG_CHECKED_NONE);
+        mSingleCancelable = typedArray.getBoolean(R.styleable.FlowTagLayout_ftl_single_cancelable, false);
+        int entriesID = typedArray.getResourceId(R.styleable.FlowTagLayout_ftl_entries, 0);
+        if (entriesID != 0) {
+            BaseTagAdapter tagAdapter = setItems(ResUtils.getStringArray(entriesID));
+            int selectedIDs = typedArray.getResourceId(R.styleable.FlowTagLayout_ftl_selecteds, 0);
+            if (selectedIDs != 0) {
+                tagAdapter.setSelectedPositions(ResUtils.getIntArray(selectedIDs));
             }
-            typedArray.recycle();
         }
+        typedArray.recycle();
     }
 
+    /**
+     * 设置单选模式下点击是否可取消选中
+     *
+     * @param singleCancelable
+     * @return
+     */
+    public FlowTagLayout setSingleCancelable(boolean singleCancelable) {
+        mSingleCancelable = singleCancelable;
+        return this;
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -143,12 +153,12 @@ public class FlowTagLayout extends ViewGroup {
             int childHeight = childView.getMeasuredHeight();
 
             //因为子View可能设置margin，这里要加上margin的距离
-            MarginLayoutParams mlp = (MarginLayoutParams) childView.getLayoutParams();
-            int realChildWidth = childWidth + mlp.leftMargin + mlp.rightMargin;
-            int realChildHeight = childHeight + mlp.topMargin + mlp.bottomMargin;
+            MarginLayoutParams lp = (MarginLayoutParams) childView.getLayoutParams();
+            int realChildWidth = childWidth + lp.leftMargin + lp.rightMargin;
+            int realChildHeight = childHeight + lp.topMargin + lp.bottomMargin;
 
             //如果当前一行的宽度加上要加入的子view的宽度大于父容器给的宽度，就换行
-            if ((lineWidth + realChildWidth) > sizeWidth) {
+            if ((lineWidth + realChildWidth) > sizeWidth - getPaddingLeft() - getPaddingRight()) {
                 //换行
                 resultWidth = Math.max(lineWidth, realChildWidth);
                 resultHeight += realChildHeight;
@@ -179,9 +189,8 @@ public class FlowTagLayout extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int flowWidth = getWidth();
 
-        int childLeft = 0;
-        int childTop = 0;
-
+        int childLeft = getPaddingStart();
+        int childTop = getPaddingTop();
         //遍历子控件，记录每个子view的位置
         for (int i = 0, childCount = getChildCount(); i < childCount; i++) {
             View childView = getChildAt(i);
@@ -194,24 +203,36 @@ public class FlowTagLayout extends ViewGroup {
             //获取到测量的宽和高
             int childWidth = childView.getMeasuredWidth();
             int childHeight = childView.getMeasuredHeight();
-
             //因为子View可能设置margin，这里要加上margin的距离
-            MarginLayoutParams mlp = (MarginLayoutParams) childView.getLayoutParams();
-
-            if (childLeft + mlp.leftMargin + childWidth + mlp.rightMargin > flowWidth) {
+            MarginLayoutParams lp = (MarginLayoutParams) childView.getLayoutParams();
+            int realChildWidth = childWidth + lp.leftMargin + lp.rightMargin;
+            int realChildHeight = childHeight + lp.topMargin + lp.bottomMargin;
+            if (childLeft + realChildWidth > flowWidth - getPaddingLeft() - getPaddingRight()) {
                 //换行处理
-                childTop += (mlp.topMargin + childHeight + mlp.bottomMargin);
-                childLeft = 0;
+                childTop += realChildHeight;
+                childLeft = getPaddingStart();
             }
             //布局
-            int left = childLeft + mlp.leftMargin;
-            int top = childTop + mlp.topMargin;
-            int right = childLeft + mlp.leftMargin + childWidth;
-            int bottom = childTop + mlp.topMargin + childHeight;
-            childView.layout(left, top, right, bottom);
-
-            childLeft += (mlp.leftMargin + childWidth + mlp.rightMargin);
+            if (isRtl()) {
+                int end = flowWidth - (childLeft + lp.getMarginStart());
+                int top = childTop + lp.topMargin;
+                int start = end - childWidth;
+                int bottom = top + childHeight;
+                childView.layout(start, top, end, bottom);
+            } else {
+                int left = childLeft + lp.getMarginStart();
+                int top = childTop + lp.topMargin;
+                int right = left + childWidth;
+                int bottom = top + childHeight;
+                childView.layout(left, top, right, bottom);
+            }
+            childLeft += realChildWidth;
         }
+    }
+
+
+    private boolean isRtl() {
+        return getLayoutDirection() == LAYOUT_DIRECTION_RTL;
     }
 
     @Override
@@ -240,6 +261,64 @@ public class FlowTagLayout extends ViewGroup {
         if (mAdapter != null) {
             mDataSetObserver = new AdapterDataSetObserver();
             mAdapter.registerDataSetObserver(mDataSetObserver);
+        }
+        return this;
+    }
+
+    /**
+     * 增加标签数据
+     *
+     * @param data
+     */
+    public <T> FlowTagLayout addTag(T data) {
+        if (mAdapter != null) {
+            mAdapter.addTag(data);
+        }
+        return this;
+    }
+
+    /**
+     * 增加标签数据
+     *
+     * @param datas
+     */
+    public <T> FlowTagLayout addTags(List<T> datas) {
+        if (mAdapter != null) {
+            mAdapter.addTags(datas);
+        }
+        return this;
+    }
+
+    /**
+     * 增加标签数据
+     *
+     * @param datas
+     */
+    public <T> FlowTagLayout addTags(T[] datas) {
+        if (mAdapter != null) {
+            mAdapter.addTags(datas);
+        }
+        return this;
+    }
+
+    /**
+     * 清除并增加标签数据
+     *
+     * @param datas
+     */
+    public <T> FlowTagLayout clearAndAddTags(List<T> datas) {
+        if (mAdapter != null) {
+            mAdapter.clearAndAddTags(datas);
+        }
+        return this;
+    }
+
+    /**
+     * 清除标签数据
+     */
+    public <T> FlowTagLayout clearTags() {
+        if (mAdapter != null) {
+            mAdapter.clearData();
         }
         return this;
     }
@@ -286,19 +365,22 @@ public class FlowTagLayout extends ViewGroup {
                         mCheckedTagArray.put(i, true);
                         childView.setSelected(true);
                     }
-                } else if (mTagCheckMode == FLOW_TAG_DISPLAY) { //不可点击
+                } else if (mTagCheckMode == FLOW_TAG_DISPLAY) {
+                    //不可点击
                     mCheckedTagArray.put(i, true);
                     childView.setSelected(true);
                     childView.setEnabled(false);
                 }
             }
-            mSelectedIndexs = null; //重新加载数据，点击索引清空
+            //重新加载数据，点击索引清空
+            setSelectedIndexs(null);
             setChildViewClickListener(index, childView);
         }
     }
 
     /**
      * 设置子控件的点击监听
+     *
      * @param index
      * @param childView
      */
@@ -313,21 +395,29 @@ public class FlowTagLayout extends ViewGroup {
                 } else if (mTagCheckMode == FLOW_TAG_CHECKED_SINGLE) {
                     //判断状态
                     if (mCheckedTagArray.get(index)) {
-                        return;
-                    }
-                    //更新全部状态为fasle
+                        if (mSingleCancelable) {
+                            //更新点击状态
+                            mCheckedTagArray.put(index, false);
+                            childView.setSelected(false);
+                            setSelectedIndexs(new ArrayList<Integer>());
+                            if (mOnTagSelectListener != null) {
+                                mOnTagSelectListener.onItemSelect(FlowTagLayout.this, index, new ArrayList<Integer>());
+                            }
+                        }
+                    } else {
+                        //更新全部状态为fasle
+                        for (int k = 0; k < mAdapter.getCount(); k++) {
+                            mCheckedTagArray.put(k, false);
+                            getChildAt(k).setSelected(false);
+                        }
 
-                    for (int k = 0; k < mAdapter.getCount(); k++) {
-                        mCheckedTagArray.put(k, false);
-                        getChildAt(k).setSelected(false);
-                    }
-                    //更新点击状态
-                    mCheckedTagArray.put(index, true);
-                    childView.setSelected(true);
-
-                    setSelectedIndexs(Arrays.asList(index));
-                    if (mOnTagSelectListener != null) {
-                        mOnTagSelectListener.onItemSelect(FlowTagLayout.this, index, Arrays.asList(index));
+                        //更新点击状态
+                        mCheckedTagArray.put(index, true);
+                        childView.setSelected(true);
+                        setSelectedIndexs(Collections.singletonList(index));
+                        if (mOnTagSelectListener != null) {
+                            mOnTagSelectListener.onItemSelect(FlowTagLayout.this, index, Collections.singletonList(index));
+                        }
                     }
                 } else if (mTagCheckMode == FLOW_TAG_CHECKED_MULTI) {
                     if (mCheckedTagArray.get(index)) {
@@ -383,20 +473,51 @@ public class FlowTagLayout extends ViewGroup {
     }
 
     private FlowTagLayout setSelectedIndexs(List<Integer> selectedIndexs) {
-        mSelectedIndexs = selectedIndexs;
+        if (mAdapter != null) {
+            mAdapter.setSelectedIndexs(selectedIndexs);
+        }
         return this;
     }
 
     /**
      * 获取选中索引的集合
+     *
      * @return
      */
+    @Deprecated
+    @Nullable
     public List<Integer> getSelectedIndexs() {
-        if (mSelectedIndexs != null) {
-            return mSelectedIndexs;
-        } else {
-            return getAdapter().getInitSelectedPositions();
+        if (mAdapter != null) {
+            return mAdapter.getSelectedIndexs();
         }
+        return null;
+    }
+
+    /**
+     * 获取选中索引
+     *
+     * @return
+     */
+    @Deprecated
+    public int getSelectedIndex() {
+        if (mAdapter != null) {
+            return mAdapter.getSelectedIndex();
+        }
+        return -1;
+    }
+
+    /**
+     * 获取选中索引
+     *
+     * @return
+     */
+    @Nullable
+    @Deprecated
+    public <T> T getSelectedItem() {
+        if (mAdapter != null) {
+            return (T) mAdapter.getSelectedItem();
+        }
+        return null;
     }
 
     /**
@@ -404,7 +525,8 @@ public class FlowTagLayout extends ViewGroup {
      *
      * @param items A list of items
      */
-    public <T> BaseTagAdapter setItems(@NonNull T... items) {
+    @SafeVarargs
+    public final <T> BaseTagAdapter setItems(@NonNull T... items) {
         return setItems(Arrays.asList(items));
     }
 
@@ -426,6 +548,7 @@ public class FlowTagLayout extends ViewGroup {
 
     /**
      * 设置初始化选中的标签索引
+     *
      * @param ps
      * @return
      */
@@ -438,6 +561,7 @@ public class FlowTagLayout extends ViewGroup {
 
     /**
      * 设置初始化选中的标签索引
+     *
      * @param ps
      * @return
      */
@@ -450,6 +574,7 @@ public class FlowTagLayout extends ViewGroup {
 
     /**
      * 设置初始化选中的标签索引
+     *
      * @param ps
      * @return
      */
@@ -463,16 +588,19 @@ public class FlowTagLayout extends ViewGroup {
 
     /**
      * 设置默认选中的内容
+     *
      * @param selectedItems 选中的内容集合
      * @return
      */
-    public <T> FlowTagLayout setSelectedItems(T... selectedItems) {
+    @SafeVarargs
+    public final <T> FlowTagLayout setSelectedItems(T... selectedItems) {
         setSelectedItems(Arrays.asList(selectedItems));
         return this;
     }
 
     /**
      * 设置默认选中的内容
+     *
      * @param selectedItems 选中的内容集合
      * @return
      */
@@ -488,13 +616,11 @@ public class FlowTagLayout extends ViewGroup {
     /**
      * 获取选中内容在流布局中的索引位置集合
      *
-     * @param selectedItems
-     *            选中的内容集合
-     * @param items
-     *            流布局中选项的集合
+     * @param selectedItems 选中的内容集合
+     * @param items         流布局中选项的集合
      * @return
      */
-    private  <T> List<Integer> getSelectedPositions(List<T> selectedItems, List<T> items) {
+    private <T> List<Integer> getSelectedPositions(List<T> selectedItems, List<T> items) {
         List<Integer> positions = new ArrayList<>();
         if (!isListEmpty(selectedItems) && !isListEmpty(items)) {
             for (int i = 0; i < selectedItems.size(); i++) {
@@ -511,6 +637,7 @@ public class FlowTagLayout extends ViewGroup {
 
     /**
      * 集合是否为空
+     *
      * @param list
      * @param <T>
      * @return

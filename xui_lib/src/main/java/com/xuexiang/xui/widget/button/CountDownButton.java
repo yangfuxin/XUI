@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
-import android.support.v7.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatButton;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -69,22 +69,21 @@ public class CountDownButton extends AppCompatButton {
     private boolean isCountDownNow;
 
     public CountDownButton(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public CountDownButton(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
+        this(context, attrs, R.attr.CountDownButtonStyle);
     }
 
     public CountDownButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context, attrs);
+        init(context, attrs, defStyleAttr);
     }
 
-    private void init(Context context, AttributeSet attrs) {
+    private void init(Context context, AttributeSet attrs, int defStyleAttr) {
         // 获取自定义属性值
-        initAttr(context, attrs);
+        initAttr(context, attrs, defStyleAttr);
 
         // 初始化倒计时Timer
         if (mCountDownTimer == null) {
@@ -110,18 +109,16 @@ public class CountDownButton extends AppCompatButton {
      * @param context
      * @param attrs
      */
-    private void initAttr(Context context, AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.CountDownButton);
-        if (typedArray != null) {
-            mCountDownFormat = typedArray.getString(R.styleable.CountDownButton_cdbt_countDownFormat);
-            if (TextUtils.isEmpty(mCountDownFormat)) {
-                mCountDownFormat = DEFAULT_COUNT_FORMAT;
-            }
-            mCountDownTime = typedArray.getInteger(R.styleable.CountDownButton_cdbt_countDown, DEFAULT_COUNTDOWN_TIME);
-            mInterval = typedArray.getInteger(R.styleable.CountDownButton_cdbt_countDownInterval, DEFAULT_INTERVAL);
-            mEnableCountDown = (mCountDownTime > mInterval) && typedArray.getBoolean(R.styleable.CountDownButton_cdbt_enableCountDown, true);
-            typedArray.recycle();
+    private void initAttr(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.CountDownButton, defStyleAttr, 0);
+        mCountDownFormat = typedArray.getString(R.styleable.CountDownButton_cdbt_countDownFormat);
+        if (TextUtils.isEmpty(mCountDownFormat)) {
+            mCountDownFormat = DEFAULT_COUNT_FORMAT;
         }
+        mCountDownTime = typedArray.getInteger(R.styleable.CountDownButton_cdbt_countDown, DEFAULT_COUNTDOWN_TIME);
+        mInterval = typedArray.getInteger(R.styleable.CountDownButton_cdbt_countDownInterval, DEFAULT_INTERVAL);
+        mEnableCountDown = (mCountDownTime > mInterval) && typedArray.getBoolean(R.styleable.CountDownButton_cdbt_enableCountDown, true);
+        typedArray.recycle();
     }
 
 

@@ -27,22 +27,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.ArrayRes;
-import android.support.annotation.AttrRes;
-import android.support.annotation.ColorInt;
-import android.support.annotation.ColorRes;
-import android.support.annotation.DimenRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntRange;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.annotation.UiThread;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
@@ -62,8 +46,25 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import androidx.annotation.ArrayRes;
+import androidx.annotation.AttrRes;
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DimenRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntRange;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.annotation.UiThread;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.XUI;
+import com.xuexiang.xui.utils.ResUtils;
 import com.xuexiang.xui.utils.ThemeUtils;
 import com.xuexiang.xui.widget.dialog.materialdialog.internal.MDButton;
 import com.xuexiang.xui.widget.dialog.materialdialog.internal.MDRootLayout;
@@ -78,6 +79,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
 
 /**
  * Material Design Dialog
@@ -146,7 +148,6 @@ public class MaterialDialog extends DialogBase
                 .getViewTreeObserver()
                 .addOnGlobalLayoutListener(
                         new ViewTreeObserver.OnGlobalLayoutListener() {
-                            @SuppressWarnings("ConstantConditions")
                             @Override
                             public void onGlobalLayout() {
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
@@ -228,7 +229,7 @@ public class MaterialDialog extends DialogBase
         } else {
             // Default adapter, choice mode
             if (listType == ListType.MULTI) {
-                final CheckBox cb = (CheckBox) view.findViewById(R.id.md_control);
+                final CheckBox cb = view.findViewById(R.id.md_control);
                 if (!cb.isEnabled()) {
                     return false;
                 }
@@ -265,7 +266,7 @@ public class MaterialDialog extends DialogBase
                     }
                 }
             } else if (listType == ListType.SINGLE) {
-                final RadioButton radio = (RadioButton) view.findViewById(R.id.md_control);
+                final RadioButton radio = view.findViewById(R.id.md_control);
                 if (!radio.isEnabled()) {
                     return false;
                 }
@@ -302,8 +303,7 @@ public class MaterialDialog extends DialogBase
 
     final Drawable getListSelector() {
         if (builder.listSelector != 0) {
-            return ResourcesCompat.getDrawable(
-                    builder.context.getResources(), builder.listSelector, null);
+            return ResUtils.getDrawable(builder.context, builder.listSelector);
         }
         final Drawable d = ThemeUtils.resolveDrawable(builder.context, R.attr.md_list_selector);
         if (d != null) {
@@ -330,8 +330,7 @@ public class MaterialDialog extends DialogBase
     /* package */ Drawable getButtonSelector(DialogAction which, boolean isStacked) {
         if (isStacked) {
             if (builder.btnSelectorStacked != 0) {
-                return ResourcesCompat.getDrawable(
-                        builder.context.getResources(), builder.btnSelectorStacked, null);
+                return ResUtils.getDrawable(builder.context, builder.btnSelectorStacked);
             }
             final Drawable d =
                     ThemeUtils.resolveDrawable(builder.context, R.attr.md_btn_stacked_selector);
@@ -344,8 +343,7 @@ public class MaterialDialog extends DialogBase
             switch (which) {
                 case NEUTRAL:
                     if (builder.btnSelectorNeutral != 0) {
-                        return ResourcesCompat.getDrawable(
-                                builder.context.getResources(), builder.btnSelectorNeutral, null);
+                        return ResUtils.getDrawable(builder.context, builder.btnSelectorNeutral);
                     }
                     d = ThemeUtils.resolveDrawable(builder.context, R.attr.md_btn_neutral_selector);
                     if (d != null) {
@@ -358,8 +356,7 @@ public class MaterialDialog extends DialogBase
                     break;
                 case NEGATIVE:
                     if (builder.btnSelectorNegative != 0) {
-                        return ResourcesCompat.getDrawable(
-                                builder.context.getResources(), builder.btnSelectorNegative, null);
+                        return ResUtils.getDrawable(builder.context, builder.btnSelectorNegative);
                     }
                     d = ThemeUtils.resolveDrawable(builder.context, R.attr.md_btn_negative_selector);
                     if (d != null) {
@@ -372,8 +369,7 @@ public class MaterialDialog extends DialogBase
                     break;
                 default:
                     if (builder.btnSelectorPositive != 0) {
-                        return ResourcesCompat.getDrawable(
-                                builder.context.getResources(), builder.btnSelectorPositive, null);
+                        return ResUtils.getDrawable(builder.context, builder.btnSelectorPositive);
                     }
                     d = ThemeUtils.resolveDrawable(builder.context, R.attr.md_btn_positive_selector);
                     if (d != null) {
@@ -1030,11 +1026,11 @@ public class MaterialDialog extends DialogBase
         public static int getLayoutForType(ListType type) {
             switch (type) {
                 case REGULAR:
-                    return R.layout.md_listitem;
+                    return R.layout.md_layout_listitem;
                 case SINGLE:
-                    return R.layout.md_listitem_singlechoice;
+                    return R.layout.md_layout_listitem_singlechoice;
                 case MULTI:
-                    return R.layout.md_listitem_multichoice;
+                    return R.layout.md_layout_listitem_multichoice;
                 default:
                     throw new IllegalArgumentException("Not a valid list type");
             }
@@ -1273,8 +1269,8 @@ public class MaterialDialog extends DialogBase
             this.buttonsGravity =
                     ThemeUtils.resolveGravityEnum(context, R.attr.md_buttons_gravity, this.buttonsGravity);
 
-            final String mediumFont = ThemeUtils.resolveString(context, R.attr.md_medium_font);
-            final String regularFont = ThemeUtils.resolveString(context, R.attr.md_regular_font);
+            final String mediumFont = ThemeUtils.resolveString(context, R.attr.md_medium_font, XUI.getDefaultFontAssetPath());
+            final String regularFont = ThemeUtils.resolveString(context, R.attr.md_regular_font, XUI.getDefaultFontAssetPath());
             try {
                 typeface(mediumFont, regularFont);
             } catch (Throwable ignored) {
@@ -1315,7 +1311,6 @@ public class MaterialDialog extends DialogBase
             return regularFont;
         }
 
-        @SuppressWarnings("ConstantConditions")
         private void checkSingleton() {
             if (ThemeSingleton.get(false) == null) {
                 return;
@@ -1499,7 +1494,7 @@ public class MaterialDialog extends DialogBase
 
         public Builder iconRes(@DrawableRes int icon) {
             if (icon != -1) {
-                this.icon = ResourcesCompat.getDrawable(context.getResources(), icon, null);
+                this.icon = ResUtils.getDrawable(context, icon);
             }
             return this;
         }
@@ -1545,7 +1540,6 @@ public class MaterialDialog extends DialogBase
         public Builder content(@StringRes int contentRes, Object... formatArgs) {
             String str =
                     String.format(this.context.getString(contentRes), formatArgs).replace("\n", "<br/>");
-            //noinspection deprecation
             return content(Html.fromHtml(str));
         }
 
@@ -2205,7 +2199,7 @@ public class MaterialDialog extends DialogBase
          * @param themeStyle
          * @return
          */
-        public Builder customTheme(@NonNull int themeStyle) {
+        public Builder customTheme(int themeStyle) {
             this.customTheme = themeStyle;
             return this;
         }
@@ -2241,7 +2235,7 @@ public class MaterialDialog extends DialogBase
         }
 
         /**
-         * Sets a custom {@link android.support.v7.widget.RecyclerView.Adapter} for the dialog's list
+         * Sets a custom {@link androidx.recyclerview.widget.RecyclerView.Adapter} for the dialog's list
          *
          * @param adapter       The adapter to set to the list.
          * @param layoutManager The layout manager to use in the RecyclerView. Pass null to use the
@@ -2408,7 +2402,7 @@ public class MaterialDialog extends DialogBase
             this.inputMinLength = minLength;
             this.inputMaxLength = maxLength;
             if (errorColor == 0) {
-                this.inputRangeErrorColor = ThemeUtils.getColor(context, R.color.md_edittext_error);
+                this.inputRangeErrorColor = ThemeUtils.resolveColor(context, R.attr.xui_config_color_error_text);
             } else {
                 this.inputRangeErrorColor = errorColor;
             }

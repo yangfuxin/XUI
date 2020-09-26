@@ -22,13 +22,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
-import android.support.v7.widget.SwitchCompat;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.xuexiang.xaop.annotation.IOThread;
 import com.xuexiang.xaop.annotation.MainThread;
@@ -39,13 +39,13 @@ import com.xuexiang.xqrcode.XQRCode;
 import com.xuexiang.xqrcode.util.QRCodeProduceUtils;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 import com.xuexiang.xutil.app.IntentUtils;
 import com.xuexiang.xutil.app.PathUtils;
 import com.xuexiang.xutil.common.StringUtils;
 import com.xuexiang.xutil.data.DateUtils;
 import com.xuexiang.xutil.display.ImageUtils;
 import com.xuexiang.xutil.file.FileUtils;
-import com.xuexiang.xutil.tip.ToastUtils;
 
 import java.io.File;
 
@@ -131,33 +131,22 @@ public class QRCodeProduceFragment extends BaseFragment {
      */
     @Override
     protected void initListeners() {
-        mScChange.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    mLLComplexCreate.setVisibility(View.VISIBLE);
-                    mLLNormalCreate.setVisibility(View.GONE);
-                } else {
-                    mLLComplexCreate.setVisibility(View.GONE);
-                    mLLNormalCreate.setVisibility(View.VISIBLE);
-                }
+        mScChange.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                mLLComplexCreate.setVisibility(View.VISIBLE);
+                mLLNormalCreate.setVisibility(View.GONE);
+            } else {
+                mLLComplexCreate.setVisibility(View.GONE);
+                mLLNormalCreate.setVisibility(View.VISIBLE);
             }
         });
 
-        mCbAutoColor.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mEtColorDark.setEnabled(!isChecked);
-                mEtColorLight.setEnabled(!isChecked);
-            }
+        mCbAutoColor.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mEtColorDark.setEnabled(!isChecked);
+            mEtColorLight.setEnabled(!isChecked);
         });
 
-        mCbBinarize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mEtBinarizeThreshold.setEnabled(isChecked);
-            }
-        });
+        mCbBinarize.setOnCheckedChangeListener((buttonView, isChecked) -> mEtBinarizeThreshold.setEnabled(isChecked));
     }
 
     @OnClick({R.id.btn_save, R.id.btn_create_no_logo, R.id.btn_create_with_logo, R.id.btn_background_image, R.id.btn_remove_background_image, R.id.btn_create})
@@ -168,7 +157,7 @@ public class QRCodeProduceFragment extends BaseFragment {
                 break;
             case R.id.btn_create_no_logo:
                 if (StringUtils.isSpace(mEtInput.getEditableText().toString())) {
-                    ToastUtils.toast("请输入二维码内容!");
+                    XToastUtils.warning("请输入二维码内容!");
                     return;
                 }
 
@@ -177,7 +166,7 @@ public class QRCodeProduceFragment extends BaseFragment {
                 break;
             case R.id.btn_create_with_logo:
                 if (StringUtils.isSpace(mEtInput.getEditableText().toString())) {
-                    ToastUtils.toast("请输入二维码内容!");
+                    XToastUtils.toast("请输入二维码内容!");
                     return;
                 }
 
@@ -190,11 +179,11 @@ public class QRCodeProduceFragment extends BaseFragment {
                 break;
             case R.id.btn_remove_background_image:
                 backgroundImage = null;
-                ToastUtils.toast("背景图片已被去除！");
+                XToastUtils.toast("背景图片已被去除！");
                 break;
             case R.id.btn_create:
                 if (StringUtils.isSpace(mEtInput.getEditableText().toString())) {
-                    ToastUtils.toast("请输入二维码内容!");
+                    XToastUtils.warning("请输入二维码内容!");
                     return;
                 }
 
@@ -214,10 +203,10 @@ public class QRCodeProduceFragment extends BaseFragment {
             try {
                 Uri imageUri = data.getData();
                 backgroundImage = BitmapFactory.decodeFile(PathUtils.getFilePathByUri(getContext(), imageUri));
-                ToastUtils.toast("成功添加背景图片！");
+                XToastUtils.toast("成功添加背景图片！");
             } catch (Exception e) {
                 e.printStackTrace();
-                ToastUtils.toast("添加背景图片失败！");
+                XToastUtils.error("添加背景图片失败！");
             }
         }
     }
@@ -227,9 +216,9 @@ public class QRCodeProduceFragment extends BaseFragment {
     private void saveQRCode() {
         if (isQRCodeCreated) {
             boolean result = ImageUtils.save(ImageUtils.view2Bitmap(mIvQrcode), FileUtils.getDiskCacheDir() + File.separator + "XQRCode_" + DateUtils.getNowMills() + ".png", Bitmap.CompressFormat.PNG);
-            ToastUtils.toast("二维码保存" + (result ? "成功" : "失败") + "!");
+            XToastUtils.toast("二维码保存" + (result ? "成功" : "失败") + "!");
         } else {
-            ToastUtils.toast("请先生成二维码!");
+            XToastUtils.toast("请先生成二维码!");
         }
     }
 
@@ -276,7 +265,7 @@ public class QRCodeProduceFragment extends BaseFragment {
                 builder.setColorLight(Color.parseColor(mEtColorLight.getText().toString()));
             } catch (Exception e) {
                 e.printStackTrace();
-                ToastUtils.toast("色值填写出错!");
+                XToastUtils.error("色值填写出错!");
             }
         }
         if (mEtBinarizeThreshold.getText().length() != 0) {

@@ -20,8 +20,8 @@ package com.xuexiang.xui.widget.dialog.strategy;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.annotation.ArrayRes;
-import android.support.annotation.DrawableRes;
+import androidx.annotation.ArrayRes;
+import androidx.annotation.DrawableRes;
 
 /**
  * 对话框的策略
@@ -30,6 +30,11 @@ import android.support.annotation.DrawableRes;
  * @since 2018/11/14 下午11:24
  */
 public interface IDialogStrategy {
+
+    /**
+     * 无图标
+     */
+    int NO_ICON = -1;
 
     /**
      * 显示简要的提示对话框

@@ -1,14 +1,28 @@
 package com.xuexiang.xuidemo.base;
 
 import android.content.res.Configuration;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
+import com.umeng.analytics.MobclickAgent;
+import com.xuexiang.xaop.annotation.MemoryCache;
 import com.xuexiang.xaop.annotation.SingleClick;
+import com.xuexiang.xaop.cache.XMemoryCache;
 import com.xuexiang.xpage.base.XPageContainerListFragment;
+import com.xuexiang.xpage.base.XPageFragment;
+import com.xuexiang.xpage.core.PageOption;
+import com.xuexiang.xpage.enums.CoreAnim;
+import com.xuexiang.xui.utils.DrawableUtils;
+import com.xuexiang.xui.utils.ThemeUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xui.widget.actionbar.TitleUtils;
+import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.SimpleAdapter;
 
 import java.util.ArrayList;
@@ -35,12 +49,13 @@ public abstract class ComponentContainerFragment extends XPageContainerListFragm
     }
 
     protected TitleBar initTitle() {
-        return TitleUtils.addTitleBarDynamic((ViewGroup) getRootView(), getPageTitle(), new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popToBack();
-            }
-        });
+        return TitleUtils.addTitleBarDynamic((ViewGroup) getRootView(), getPageTitle(), v -> popToBack())
+                .setLeftImageDrawable(getNavigationBackDrawable(R.attr.xui_actionbar_ic_navigation_back));
+    }
+
+    @MemoryCache
+    private Drawable getNavigationBackDrawable(int navigationBackId) {
+        return DrawableUtils.getSupportRTLDrawable(ThemeUtils.resolveDrawable(getContext(), navigationBackId));
     }
 
     @Override
@@ -83,10 +98,42 @@ public abstract class ComponentContainerFragment extends XPageContainerListFragm
         super.onDestroyView();
     }
 
+    /**
+     * 打开一个新的页面
+     *
+     * @param name
+     * @param <T>
+     * @return
+     */
+    public <T extends XPageFragment> Fragment openNewPage(String name) {
+        return new PageOption(name)
+                .setAnim(CoreAnim.slide)
+                .setNewActivity(true)
+                .open(this);
+    }
+
+
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig); //屏幕旋转时刷新一下title
-        ((ViewGroup) getRootView()).removeViewAt(0);
-        initTitle();
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        //屏幕旋转时刷新一下title
+        super.onConfigurationChanged(newConfig);
+        XMemoryCache.getInstance().clear();
+        ViewGroup root = (ViewGroup) getRootView();
+        if (root.getChildAt(0) instanceof TitleBar) {
+            root.removeViewAt(0);
+            initTitle();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        MobclickAgent.onPageStart(getPageName());
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        MobclickAgent.onPageEnd(getPageName());
     }
 }

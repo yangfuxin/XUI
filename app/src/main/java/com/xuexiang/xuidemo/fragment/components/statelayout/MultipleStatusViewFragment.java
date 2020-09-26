@@ -9,7 +9,7 @@ import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xui.widget.statelayout.MultipleStatusView;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -52,12 +52,9 @@ public class MultipleStatusViewFragment extends BaseFragment {
         mMultipleStatusView.setOnRetryClickListener(mRetryClickListener);
     }
 
-    final View.OnClickListener mRetryClickListener = (new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            ToastUtils.toast("点击重试");
-            loading();
-        }
+    final View.OnClickListener mRetryClickListener = (v -> {
+        XToastUtils.toast("点击重试");
+        loading();
     });
 
     void loading() {
@@ -83,13 +80,15 @@ public class MultipleStatusViewFragment extends BaseFragment {
             case R.id.fab_content:
                 mMultipleStatusView.showContent();
                 break;
+            default:
+                break;
         }
         mFloatingActionMenu.toggle(false);
     }
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         mLoadingHandler.removeCallbacksAndMessages(null);
+        super.onDestroyView();
     }
 }

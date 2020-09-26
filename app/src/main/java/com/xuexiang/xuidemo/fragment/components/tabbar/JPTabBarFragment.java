@@ -1,22 +1,22 @@
 package com.xuexiang.xuidemo.fragment.components.tabbar;
 
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+
 import com.jpeng.jptabbar.JPTabBar;
 import com.jpeng.jptabbar.OnTabSelectListener;
-import com.jpeng.jptabbar.anno.NorIcons;
-import com.jpeng.jptabbar.anno.SeleIcons;
-import com.jpeng.jptabbar.anno.Titles;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseActivity;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class JPTabBarFragment extends BaseFragment implements OnTabSelectListene
 
     private PagerAdapter mPagerAdapter = new PagerAdapter() {
         @Override
-        public boolean isViewFromObject(View view, Object object) {
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
             return view == object;
         }
 
@@ -59,7 +59,7 @@ public class JPTabBarFragment extends BaseFragment implements OnTabSelectListene
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
+        public void destroyItem(ViewGroup container, int position, @NonNull Object object) {
             container.removeView((View) object);
         }
     };
@@ -91,7 +91,7 @@ public class JPTabBarFragment extends BaseFragment implements OnTabSelectListene
      * 初始化控件
      * mTabbar的设置详细参见
      * {@link BaseActivity#mTitles}
-     * {@link BaseActivity#mSeleIcons}
+     * {@link BaseActivity#mSelectIcons}
      * {@link BaseActivity#mNormalIcons}
      */
     @Override
@@ -99,17 +99,13 @@ public class JPTabBarFragment extends BaseFragment implements OnTabSelectListene
         //页面可以滑动
         mTabbar.setGradientEnable(true);
         mTabbar.setPageAnimateEnable(true);
+        mTabbar.setTabTypeFace(XUI.getDefaultTypeface());
 
         mViewPager.setAdapter(mPagerAdapter);
         mTabbar.setContainer(mViewPager);
 
         if (mTabbar.getMiddleView() != null) {
-            mTabbar.getMiddleView().setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ToastUtils.toast("中间点击");
-                }
-            });
+            mTabbar.getMiddleView().setOnClickListener(v -> XToastUtils.toast("中间点击"));
         }
 
         mTabbar.showBadge(2,"", true);
@@ -130,7 +126,7 @@ public class JPTabBarFragment extends BaseFragment implements OnTabSelectListene
         if (index == 2) {
             mTabbar.hideBadge(2);
         }
-        ToastUtils.toast("点击了" + getString(mTitles[index]));
+        XToastUtils.toast("点击了" + getString(mTitles[index]));
     }
 
     /**

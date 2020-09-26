@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none">
@@ -26,13 +26,16 @@
                 android:id="@+id/clearEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp" />
+                android:layout_margin="5dp"
+                android:hint="请输入内容..."
+                android:textAlignment="viewStart" />
 
             <com.xuexiang.xui.widget.edittext.ClearEditText
                 android:id="@+id/clearEditText1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
+                android:hint="请输入内容..."
                 app:cet_clearIcon="@drawable/icon_clear"
                 app:cet_clearIconSize="@dimen/default_clear_icon_size" />
 
@@ -42,14 +45,15 @@
                 android:layout_margin="5dp"
                 android:text="PasswordEditText:" />
 
-            <android.support.design.widget.TextInputLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/input_layout_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_marginTop="16dp"
                 android:gravity="start"
-                android:textAlignment="viewStart">
+                android:textAlignment="viewStart"
+                android:textDirection="locale">
 
                 <com.xuexiang.xui.widget.edittext.PasswordEditText
                     android:id="@+id/input_password"
@@ -58,13 +62,14 @@
                     android:gravity="start"
                     android:hint="输入密码"
                     android:inputType="textPassword"
+                    android:layoutDirection="locale"
                     android:textAlignment="viewStart"
-                    app:pet_enableIconAlpha="true" />
-            </android.support.design.widget.TextInputLayout>
+                    app:pet_enableIconAlpha="true"
+                    app:pet_isAsteriskStyle="true" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <com.xuexiang.xui.widget.edittext.PasswordEditText
                 android:id="@+id/input_password2"
-                fontPath="fonts/Roboto-Thin.ttf"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
@@ -72,7 +77,9 @@
                 android:gravity="start"
                 android:hint="重复密码"
                 android:inputType="textPassword"
+                android:layoutDirection="locale"
                 android:textAlignment="viewStart"
+                app:fontPath="fonts/Roboto-Thin.ttf"
                 app:pet_enableIconAlpha="true"
                 app:pet_hoverShowsPw="true" />
 
@@ -82,5 +89,5 @@
                 android:layout_marginTop="10dp" />
 
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

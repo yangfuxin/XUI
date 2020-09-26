@@ -1,15 +1,18 @@
 package com.xuexiang.xuidemo.fragment.expands.floatview;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.View;
 import android.widget.TextView;
 
 import com.xuexiang.xaop.annotation.IOThread;
 import com.xuexiang.xfloatview.XFloatView;
 import com.xuexiang.xuidemo.R;
-import com.xuexiang.xutil.app.PackageUtils;
+import com.xuexiang.xutil.app.AppUtils;
+import com.xuexiang.xutil.common.StringUtils;
+
+import java.util.List;
 
 /**
  * 应用切换悬浮窗
@@ -29,6 +32,7 @@ public class AppSwitchView extends XFloatView {
 
     private Handler mMainHandler = new Handler(Looper.getMainLooper());
 
+    private String mPackageName;
     /**
      * 构造器
      *
@@ -68,12 +72,34 @@ public class AppSwitchView extends XFloatView {
      */
     @Override
     protected void initListener() {
-        setOnFloatViewClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PackageUtils.openApp(getContext());
+        setOnFloatViewClickListener(v -> {
+            if (StringUtils.isEmpty(mPackageName)) {
+                AppUtils.launchApp(getContext().getPackageName());
+            } else {
+                if (!isAppForeground(mPackageName)) {
+                    AppUtils.launchApp(mPackageName);
+                }
             }
         });
+    }
+
+    /**
+     * 判断 App 是否处于前台
+     *
+     * @return {@code true}: 是<br>{@code false}: 否
+     */
+    public static boolean isAppForeground(String packageName) {
+        ActivityManager manager = AppUtils.getActivityManager();
+        List<ActivityManager.RunningAppProcessInfo> info = manager.getRunningAppProcesses();
+        if (info == null || info.size() == 0) {
+            return false;
+        }
+        for (ActivityManager.RunningAppProcessInfo aInfo : info) {
+            if (aInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                return aInfo.processName.equals(packageName);
+            }
+        }
+        return false;
     }
 
     /**
@@ -84,16 +110,14 @@ public class AppSwitchView extends XFloatView {
      */
     @IOThread
     public void updateAppInfo(final String appName, final String packageName) {
+        mPackageName = packageName;
         if (Looper.myLooper() == Looper.getMainLooper()) {
             mTvAppName.setText(String.format("应用：%s", appName));
             mTvPackageName.setText(String.format("包名：%s", packageName));
         } else {
-            mMainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    mTvAppName.setText(String.format("应用：%s", appName));
-                    mTvPackageName.setText(String.format("包名：%s", packageName));
-                }
+            mMainHandler.post(() -> {
+                mTvAppName.setText(String.format("应用：%s", appName));
+                mTvPackageName.setText(String.format("包名：%s", packageName));
             });
         }
     }

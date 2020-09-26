@@ -7,12 +7,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.support.annotation.AttrRes;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.StyleRes;
 import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -27,12 +21,17 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.AttrRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StyleRes;
+
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.XUI;
 
 /**
- *
- *
  * @author xuexiang
  * @since 2018/11/29 上午12:47
  */
@@ -61,6 +60,29 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
     private static final String PREF_NAME = "PrefShowCaseView";
 
     /**
+     * 设置已经显示
+     *
+     * @param context
+     * @param id
+     */
+    public static void setShowOnce(Context context, String id) {
+        SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sharedPrefs.edit().putBoolean(id, true).apply();
+    }
+
+    /**
+     * 是否已显示
+     *
+     * @param context
+     * @param id
+     * @return
+     */
+    public static boolean isShowOnce(Context context, String id) {
+        SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPrefs.getBoolean(id, false);
+    }
+
+    /**
      * Resets the show once flag
      *
      * @param context context that should be used to create the shared preference instance
@@ -68,7 +90,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
      */
     public static void resetShowOnce(Context context, String id) {
         SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sharedPrefs.edit().remove(id).commit();
+        sharedPrefs.edit().remove(id).apply();
     }
 
     /**
@@ -78,7 +100,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
      */
     public static void resetAllShowOnce(Context context) {
         SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sharedPrefs.edit().clear().commit();
+        sharedPrefs.edit().clear().apply();
     }
 
     /**
@@ -99,6 +121,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
     private int mPictureResId;
     private int mPictureWidth;
     private int mPictureHeight;
+    private int mPictureGravity;
+    private int mPictureOffsetX;
+    private int mPictureOffsetY;
     private int mCustomViewRes;
     private int mFocusBorderSize;
     private int mRoundRectRadius;
@@ -107,6 +132,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
     private boolean mCloseOnTouch;
     private boolean mFitSystemWindows;
     private int mAdjustHeight;
+    private int mFocusOffsetX;
     private FocusShape mFocusShape;
     private DismissListener mDismissListener;
 
@@ -126,8 +152,8 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
     public GuideCaseView(Builder builder) {
         this(builder.mActivity, builder.mView, builder.mId, builder.mTitle, builder.mSpannedTitle, builder.mTitleGravity, builder.mTitleStyle, builder.mTitleSize, builder.mTitleSizeUnit,
                 builder.mFocusCircleRadiusFactor, builder.mBackgroundColor, builder.mFocusBorderColor, builder.mFocusBorderSize, builder.mCustomViewRes, builder.mViewInflateListener,
-                builder.mEnterAnimation, builder.mExitAnimation, builder.mCloseOnTouch, builder.mFitSystemWindows, builder.mAdjustHeight, builder.mFocusShape, builder.mDismissListener, builder.mRoundRectRadius,
-                builder.mPictureResId, builder.mPictureWidth, builder.mPictureHeight, builder.mFocusPositionX, builder.mFocusPositionY, builder.mFocusCircleRadius, builder.mFocusRectangleWidth,
+                builder.mEnterAnimation, builder.mExitAnimation, builder.mCloseOnTouch, builder.mFitSystemWindows, builder.mAdjustHeight, builder.mFocusOffSetX, builder.mFocusShape, builder.mDismissListener, builder.mRoundRectRadius,
+                builder.mPictureResId, builder.mPictureWidth, builder.mPictureHeight, builder.mPictureGravity, builder.mPictureOffSetX, builder.mPictureOffSetY, builder.mFocusPositionX, builder.mFocusPositionY, builder.mFocusCircleRadius, builder.mFocusRectangleWidth,
                 builder.mFocusRectangleHeight, builder.mFocusAnimationEnabled, builder.mFocusAnimationMaxValue, builder.mFocusAnimationStep);
     }
 
@@ -167,8 +193,8 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
                           int titleGravity, int titleStyle, int titleSize, int titleSizeUnit, double focusCircleRadiusFactor,
                           int backgroundColor, int focusBorderColor, int focusBorderSize, int customViewRes,
                           OnViewInflateListener viewInflateListener, Animation enterAnimation,
-                          Animation exitAnimation, boolean closeOnTouch, boolean fitSystemWindows, int adjustHeight,
-                          FocusShape focusShape, DismissListener dismissListener, int roundRectRadius, int pictureResId, int pictureWidth, int pictureHeight,
+                          Animation exitAnimation, boolean closeOnTouch, boolean fitSystemWindows, int adjustHeight, int focusOffsetX,
+                          FocusShape focusShape, DismissListener dismissListener, int roundRectRadius, int pictureResId, int pictureWidth, int pictureHeight, int pictureGravity, int pictureOffsetX, int pictureOffsetY,
                           int focusPositionX, int focusPositionY, int focusCircleRadius, int focusRectangleWidth, int focusRectangleHeight,
                           final boolean animationEnabled, int focusAnimationMaxValue, int focusAnimationStep) {
         super(activity);
@@ -189,6 +215,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         mPictureResId = pictureResId;
         mPictureWidth = pictureWidth;
         mPictureHeight = pictureHeight;
+        mPictureGravity = pictureGravity;
+        mPictureOffsetX = pictureOffsetX;
+        mPictureOffsetY = pictureOffsetY;
         mCustomViewRes = customViewRes;
         mViewInflateListener = viewInflateListener;
         mEnterAnimation = enterAnimation;
@@ -196,6 +225,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         mCloseOnTouch = closeOnTouch;
         mFitSystemWindows = fitSystemWindows;
         mAdjustHeight = adjustHeight;
+        mFocusOffsetX = focusOffsetX;
         mFocusShape = focusShape;
         mDismissListener = dismissListener;
         mFocusPositionX = focusPositionX;
@@ -253,11 +283,11 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
     private void focus() {
         mCalculator = new Calculator(mActivity, mFocusShape, mView, mFocusCircleRadiusFactor,
-                mFitSystemWindows, mAdjustHeight);
+                mFitSystemWindows, mAdjustHeight, mFocusOffsetX);
 
-        ViewGroup androidContent = (ViewGroup) mActivity.findViewById(android.R.id.content);
+        ViewGroup androidContent = mActivity.findViewById(android.R.id.content);
         mRoot = (ViewGroup) androidContent.getParent().getParent();
-        GuideCaseView visibleView = (GuideCaseView) mRoot.findViewWithTag(CONTAINER_TAG);
+        GuideCaseView visibleView = mRoot.findViewWithTag(CONTAINER_TAG);
         setClickable(true);
         if (visibleView == null) {
             setTag(CONTAINER_TAG);
@@ -321,9 +351,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
      * @param activity should be used to find GuideCaseView inside it
      */
     public static Boolean isVisible(Activity activity) {
-        ViewGroup androidContent = (ViewGroup) activity.findViewById(android.R.id.content);
+        ViewGroup androidContent = activity.findViewById(android.R.id.content);
         ViewGroup mRoot = (ViewGroup) androidContent.getParent().getParent();
-        GuideCaseView mContainer = (GuideCaseView) mRoot.findViewWithTag(CONTAINER_TAG);
+        GuideCaseView mContainer = mRoot.findViewWithTag(CONTAINER_TAG);
         return mContainer != null;
     }
 
@@ -333,9 +363,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
      * @param activity should be used to hide GuideCaseView inside it
      */
     public static void hideCurrent(Activity activity) {
-        ViewGroup androidContent = (ViewGroup) activity.findViewById(android.R.id.content);
+        ViewGroup androidContent = activity.findViewById(android.R.id.content);
         ViewGroup mRoot = (ViewGroup) androidContent.getParent().getParent();
-        GuideCaseView mContainer = (GuideCaseView) mRoot.findViewWithTag(CONTAINER_TAG);
+        GuideCaseView mContainer = mRoot.findViewWithTag(CONTAINER_TAG);
         mContainer.hide();
     }
 
@@ -406,7 +436,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         inflateCustomView(R.layout.gcv_layout_title, new OnViewInflateListener() {
             @Override
             public void onViewInflated(View view) {
-                TextView textView = (TextView) view.findViewById(R.id.gcv_title);
+                TextView textView = view.findViewById(R.id.gcv_title);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     textView.setTextAppearance(mTitleStyle);
@@ -427,25 +457,34 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         });
     }
 
-        /**
-         * Inflates picture view layout
-         */
+    /**
+     * Inflates picture view layout
+     */
     private void inflatePicture() {
         inflateCustomView(R.layout.gcv_layout_image, new OnViewInflateListener() {
             @Override
             public void onViewInflated(View view) {
-                ImageView imageView = (ImageView) view.findViewById(R.id.gcv_img);
+                ImageView imageView = view.findViewById(R.id.gcv_img);
                 imageView.setImageResource(mPictureResId);
-                if (mPictureHeight != 0 || mPictureWidth != 0) {
-                    ViewGroup.LayoutParams params = imageView.getLayoutParams();
-                    if (mPictureHeight != 0) {
-                        params.height = mPictureHeight;
-                    }
-                    if (mPictureWidth != 0) {
-                        params.width = mPictureWidth;
-                    }
-                    imageView.setLayoutParams(params);
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) imageView.getLayoutParams();
+                params.gravity = mPictureGravity;
+                if (mPictureWidth != 0) {
+                    params.width = mPictureWidth;
                 }
+                if (mPictureHeight != 0) {
+                    params.height = mPictureHeight;
+                }
+                if (mPictureOffsetY > 0) {
+                    params.topMargin = mPictureOffsetY;
+                } else {
+                    params.bottomMargin = -mPictureOffsetY;
+                }
+                if (mPictureOffsetX > 0) {
+                    params.leftMargin = mPictureOffsetX;
+                } else {
+                    params.rightMargin = -mPictureOffsetX;
+                }
+                imageView.setLayoutParams(params);
             }
         });
 
@@ -544,11 +583,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
     @Override
     public void onGlobalLayout() {
-        if (Build.VERSION.SDK_INT < 16) {
-            mView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-        } else {
-            mView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-        }
+        mView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         focus();
     }
 
@@ -593,6 +628,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         private int mPictureResId;
         private int mPictureWidth;
         private int mPictureHeight;
+        private int mPictureGravity = Gravity.CENTER;
+        private int mPictureOffSetX;
+        private int mPictureOffSetY;
         private int mCustomViewRes;
         private int mRoundRectRadius;
         private OnViewInflateListener mViewInflateListener;
@@ -600,6 +638,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         private boolean mCloseOnTouch = true;
         private boolean mFitSystemWindows;
         private int mAdjustHeight = -1;
+        private int mFocusOffSetX;
         private FocusShape mFocusShape = FocusShape.CIRCLE;
         private DismissListener mDismissListener = null;
         private int mFocusBorderSize;
@@ -617,9 +656,9 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
             mActivity = activity;
         }
 
-
         /**
          * 设置标题文字
+         *
          * @param title title text
          * @return Builder
          */
@@ -641,6 +680,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置图片资源
+         *
          * @param pictureResId 图片资源Id
          * @return Builder
          */
@@ -651,14 +691,59 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * @param pictureResId 图片资源Id
-         * @param width 图片资源Id
-         * @param height 图片资源Id
+         * @param width        图片资源Id
+         * @param height       图片资源Id
          * @return Builder
          */
         public Builder picture(int pictureResId, int width, int height) {
             mPictureResId = pictureResId;
             mPictureWidth = width;
             mPictureHeight = height;
+            return this;
+        }
+
+        /**
+         * @param pictureGravity picture gravity
+         * @return Builder
+         */
+        public Builder pictureGravity(int pictureGravity) {
+            mPictureGravity = pictureGravity;
+            return this;
+        }
+
+        /**
+         * @param pictureGravity picture gravity
+         * @return Builder
+         */
+        public Builder pictureGravity(int pictureGravity, int offsetX, int offsetY) {
+            mPictureGravity = pictureGravity;
+            mPictureOffSetX = offsetX;
+            mPictureOffSetY = offsetY;
+            return this;
+        }
+
+        /**
+         * @return Builder
+         */
+        public Builder pictureOffSet(int offsetX, int offsetY) {
+            mPictureOffSetX = offsetX;
+            mPictureOffSetY = offsetY;
+            return this;
+        }
+
+        /**
+         * @return Builder
+         */
+        public Builder pictureOffSetX(int offsetX) {
+            mPictureOffSetX = offsetX;
+            return this;
+        }
+
+        /**
+         * @return Builder
+         */
+        public Builder pictureOffSetY(int offsetY) {
+            mPictureOffSetY = offsetY;
             return this;
         }
 
@@ -675,6 +760,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置聚焦边框的颜色
+         *
          * @param focusBorderColor Border color for focus shape
          * @return Builder
          */
@@ -685,6 +771,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置聚焦边框的粗细
+         *
          * @param focusBorderSize Border size for focus shape
          * @return Builder
          */
@@ -726,6 +813,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置聚焦的控件
+         *
          * @param view view to focus
          * @return Builder
          */
@@ -736,6 +824,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置引导朦层的背景颜色
+         *
          * @param backgroundColor background color of GuideCaseView
          * @return Builder
          */
@@ -755,6 +844,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置自定义引导朦层布局
+         *
          * @param layoutResource custom view layout resource
          * @param listener       inflate listener for custom view
          * @return Builder
@@ -767,6 +857,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置进入动画
+         *
          * @param enterAnimation enter animation for GuideCaseView
          * @return Builder
          */
@@ -777,6 +868,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置退出动画
+         *
          * @param exitAnimation exit animation for GuideCaseView
          * @return Builder
          */
@@ -807,6 +899,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 自动适应屏幕高度
+         *
          * @return
          */
         public Builder fitWindowsAuto() {
@@ -820,6 +913,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 调整的高度
+         *
          * @param adjustHeight
          * @return
          */
@@ -829,7 +923,18 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
         }
 
         /**
+         * 调整聚焦的X偏移
+         *
+         * @return
+         */
+        public Builder setFocusOffSetX(int offSetX) {
+            mFocusOffSetX = offSetX;
+            return this;
+        }
+
+        /**
          * 设置聚焦的形状，默认是圆形
+         *
          * @param focusShape
          * @return
          */
@@ -876,6 +981,7 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
 
         /**
          * 设置引导朦层消失的监听
+         *
          * @param dismissListener the dismiss listener
          * @return Builder
          */
@@ -916,6 +1022,13 @@ public class GuideCaseView extends FrameLayout implements ViewTreeObserver.OnGlo
          */
         public GuideCaseView build() {
             return new GuideCaseView(this);
+        }
+
+        /**
+         * 显示
+         */
+        public void show() {
+            build().show();
         }
     }
 }

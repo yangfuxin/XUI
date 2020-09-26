@@ -17,17 +17,17 @@
 package com.xuexiang.xuidemo.fragment.components.popupwindow;
 
 import android.graphics.Color;
-import android.support.design.widget.Snackbar;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xui.utils.ResUtils;
 import com.xuexiang.xui.utils.SnackbarUtils;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import butterknife.OnClick;
 
@@ -65,17 +65,14 @@ public class SnackbarFragment extends BaseFragment {
             case R.id.btn_indefinite:
                 SnackbarUtils.Indefinite(view, "显示时长:无限 + info").info()
                         .actionColor(ResUtils.getColor(R.color.xui_config_color_white))
-                        .setAction("确定", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                ToastUtils.toast("点击了确定！");
-                            }
-                        }).show();
+                        .setAction("确定", v -> XToastUtils.toast("点击了确定！")).show();
                 break;
             case R.id.btn_length_custom:
                 SnackbarUtils.Custom(view, "显示时长:自定义 3秒 + info", 3 * 1000)
                         .info()
                         .show();
+                break;
+            default:
                 break;
         }
     }
@@ -130,11 +127,8 @@ public class SnackbarFragment extends BaseFragment {
             case R.id.btn_action_color:
                 SnackbarUtils.Short(view, "设置按钮文字的颜色:白色")
                         .actionColor(Color.WHITE)
-                        .setAction("确定", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
+                        .setAction("确定", v -> {
 
-                            }
                         })
                         .show();
                 break;
@@ -153,12 +147,7 @@ public class SnackbarFragment extends BaseFragment {
         switch (view.getId()) {
             case R.id.btn_action:
                 SnackbarUtils.Long(view, "设置按钮文字及点击监听")
-                        .setAction("按钮文字", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                ToastUtils.toast("点击了按钮!");
-                            }
-                        }).show();
+                        .setAction("按钮文字", v -> XToastUtils.toast("点击了按钮!")).show();
                 break;
             case R.id.btn_callback:
                 SnackbarUtils.Short(view, "设置显示及隐藏监听")
@@ -166,13 +155,13 @@ public class SnackbarFragment extends BaseFragment {
                             @Override
                             public void onDismissed(Snackbar snackbar, int event) {
                                 super.onDismissed(snackbar, event);
-                                ToastUtils.toast("onDismissed!");
+                                XToastUtils.toast("onDismissed!");
                             }
 
                             @Override
                             public void onShown(Snackbar snackbar) {
                                 super.onShown(snackbar);
-                                ToastUtils.toast("onShown!");
+                                XToastUtils.toast("onShown!");
                             }
                         }).show();
                 break;

@@ -3,8 +3,9 @@ package com.xuexiang.xuidemo.fragment.expands.chart.line;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
+
+import androidx.core.content.ContextCompat;
 
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.LineChart;
@@ -15,9 +16,7 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.IFillFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.interfaces.dataprovider.LineDataProvider;
 import com.github.mikephil.charting.interfaces.datasets.IDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
@@ -27,7 +26,7 @@ import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xui.widget.dialog.bottomsheet.BottomSheet;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.fragment.expands.chart.BaseChartFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -198,11 +197,11 @@ public class BasicLineChartFragment extends BaseChartFragment implements OnChart
 
             // 设置折线图的填充区域
             set1.setDrawFilled(true);
-            set1.setFillFormatter(new IFillFormatter() {
-                @Override
-                public float getFillLinePosition(ILineDataSet dataSet, LineDataProvider dataProvider) {
-                    return chart.getAxisLeft().getAxisMinimum();
+            set1.setFillFormatter((dataSet, dataProvider) -> {
+                if (chart == null) {
+                    return 0;
                 }
+                return chart.getAxisLeft().getAxisMinimum();
             });
 
             // 设置折线图的填充颜色
@@ -224,7 +223,7 @@ public class BasicLineChartFragment extends BaseChartFragment implements OnChart
 
     @Override
     public void onValueSelected(Entry e, Highlight h) {
-        ToastUtils.toast("选中了,  x轴值:" + e.getX() + ", y轴值:" + e.getY());
+        XToastUtils.toast("选中了,  x轴值:" + e.getX() + ", y轴值:" + e.getY());
     }
 
     @Override
@@ -245,71 +244,68 @@ public class BasicLineChartFragment extends BaseChartFragment implements OnChart
                 .addItem(getResources().getString(R.string.chart_animate_y))
                 .addItem(getResources().getString(R.string.chart_animate_xy))
                 .addItem(getResources().getString(R.string.chart_save))
-                .setOnSheetItemClickListener(new BottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
-                    @Override
-                    public void onClick(BottomSheet dialog, View itemView, int position, String tag) {
-                        dialog.dismiss();
-                        switch (position) {
-                            case 0:
-                                for (IDataSet<?> set : chart.getData().getDataSets()) {
-                                    set.setDrawValues(!set.isDrawValuesEnabled());
-                                }
+                .setOnSheetItemClickListener((dialog, itemView, position, tag) -> {
+                    dialog.dismiss();
+                    switch (position) {
+                        case 0:
+                            for (IDataSet<?> set : chart.getData().getDataSets()) {
+                                set.setDrawValues(!set.isDrawValuesEnabled());
+                            }
+                            chart.invalidate();
+                            break;
+                        case 1:
+                            for (IDataSet set : chart.getData().getDataSets()) {
+                                set.setDrawIcons(!set.isDrawIconsEnabled());
+                            }
+                            chart.invalidate();
+                            break;
+                        case 2:
+                            for (ILineDataSet iSet : chart.getData().getDataSets()) {
+                                LineDataSet set = (LineDataSet) iSet;
+                                set.setDrawFilled(!set.isDrawFilledEnabled());
+                            }
+                            chart.invalidate();
+                            break;
+                        case 3:
+                            for (ILineDataSet iSet : chart.getData().getDataSets()) {
+                                LineDataSet set = (LineDataSet) iSet;
+                                set.setDrawCircles(!set.isDrawCirclesEnabled());
+                            }
+                            chart.invalidate();
+                            break;
+                        case 4:
+                            for (ILineDataSet iSet : chart.getData().getDataSets()) {
+                                LineDataSet set = (LineDataSet) iSet;
+                                set.setMode(set.getMode() == LineDataSet.Mode.CUBIC_BEZIER
+                                        ? LineDataSet.Mode.LINEAR
+                                        : LineDataSet.Mode.CUBIC_BEZIER);
+                            }
+                            chart.invalidate();
+                            break;
+                        case 5:
+                            chart.setPinchZoom(!chart.isPinchZoomEnabled());
+                            chart.invalidate();
+                            break;
+                        case 6:
+                            if (chart.getData() != null) {
+                                chart.getData().setHighlightEnabled(!chart.getData().isHighlightEnabled());
                                 chart.invalidate();
-                                break;
-                            case 1:
-                                for (IDataSet set : chart.getData().getDataSets()) {
-                                    set.setDrawIcons(!set.isDrawIconsEnabled());
-                                }
-                                chart.invalidate();
-                                break;
-                            case 2:
-                                for (ILineDataSet iSet : chart.getData().getDataSets()) {
-                                    LineDataSet set = (LineDataSet) iSet;
-                                    set.setDrawFilled(!set.isDrawFilledEnabled());
-                                }
-                                chart.invalidate();
-                                break;
-                            case 3:
-                                for (ILineDataSet iSet : chart.getData().getDataSets()) {
-                                    LineDataSet set = (LineDataSet) iSet;
-                                    set.setDrawCircles(!set.isDrawCirclesEnabled());
-                                }
-                                chart.invalidate();
-                                break;
-                            case 4:
-                                for (ILineDataSet iSet : chart.getData().getDataSets()) {
-                                    LineDataSet set = (LineDataSet) iSet;
-                                    set.setMode(set.getMode() == LineDataSet.Mode.CUBIC_BEZIER
-                                            ? LineDataSet.Mode.LINEAR
-                                            :  LineDataSet.Mode.CUBIC_BEZIER);
-                                }
-                                chart.invalidate();
-                                break;
-                            case 5:
-                                chart.setPinchZoom(!chart.isPinchZoomEnabled());
-                                chart.invalidate();
-                                break;
-                            case 6:
-                                if(chart.getData() != null) {
-                                    chart.getData().setHighlightEnabled(!chart.getData().isHighlightEnabled());
-                                    chart.invalidate();
-                                }
-                                break;
-                            case 7:
-                                chart.animateX(2000);
-                                break;
-                            case 8:
-                                chart.animateY(2000, Easing.EaseInCubic);
-                                break;
-                            case 9:
-                                chart.animateXY(2000, 2000);
-                                break;
-                            case 10:
-                                saveToGallery(chart, "BasicLineChart");
-                                break;
-                            default:
-                                break;
-                        }
+                            }
+                            break;
+                        case 7:
+                            chart.animateX(2000);
+                            break;
+                        case 8:
+                            chart.animateY(2000, Easing.EaseInCubic);
+                            break;
+                        case 9:
+                            chart.animateXY(2000, 2000);
+                            break;
+                        case 10:
+                            saveToGallery(chart, "BasicLineChart");
+                            break;
+                        default:
+                            break;
                     }
                 })
                 .build()

@@ -6,14 +6,6 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.FloatRange;
-import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.annotation.StyleRes;
-import android.support.v4.widget.PopupWindowCompat;
 import android.transition.Transition;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -24,6 +16,15 @@ import android.view.ViewGroup;
 import android.view.ViewGroupOverlay;
 import android.view.ViewTreeObserver;
 import android.widget.PopupWindow;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StyleRes;
+import androidx.core.widget.PopupWindowCompat;
 
 import com.xuexiang.xui.logs.UILog;
 
@@ -114,11 +115,22 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
 
     private OnAttachedWindowListener mOnAttachedWindowListener;
 
+    /**
+     * 是否显示
+     */
+    private boolean mIsShow;
+
 
     public EasyPopup(Context context) {
         mContext = context;
     }
 
+    /**
+     * 创建popup
+     *
+     * @param <T>
+     * @return
+     */
     public <T extends EasyPopup> T createPopup() {
         if (mPopupWindow == null) {
             mPopupWindow = new PopupWindow();
@@ -180,15 +192,14 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
                     final int x = (int) event.getX();
                     final int y = (int) event.getY();
 
+                    //outside
                     if ((event.getAction() == MotionEvent.ACTION_DOWN)
                             && ((x < 0) || (x >= mWidth) || (y < 0) || (y >= mHeight))) {
                         //outside
                         return true;
-                    } else if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
-                        //outside
-                        return true;
+                    } else {
+                        return event.getAction() == MotionEvent.ACTION_OUTSIDE;
                     }
-                    return false;
                 }
             });
         } else {
@@ -537,6 +548,8 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
         y = calculateY(anchor, vertGravity, measuredH, y);
         UILog.i("showAtAnchorView: w=" + measuredW + ",y=" + measuredH);
         PopupWindowCompat.showAsDropDown(mPopupWindow, anchor, x, y, Gravity.NO_GRAVITY);
+
+        mIsShow = true;
     }
 
     /**
@@ -607,6 +620,8 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
             case HorizontalGravity.RIGHT:
                 //anchor view右侧
                 x += anchor.getWidth();
+                break;
+            default:
                 break;
         }
 
@@ -684,8 +699,6 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void applyDim(Activity activity) {
         ViewGroup parent = (ViewGroup) activity.getWindow().getDecorView().getRootView();
-        //activity跟布局
-//        ViewGroup parent = (ViewGroup) parent1.getChildAt(0);
         Drawable dim = new ColorDrawable(mDimColor);
         dim.setBounds(0, 0, parent.getWidth(), parent.getHeight());
         dim.setAlpha((int) (255 * mDimValue));
@@ -726,8 +739,6 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void clearDim(Activity activity) {
         ViewGroup parent = (ViewGroup) activity.getWindow().getDecorView().getRootView();
-        //activity跟布局
-//        ViewGroup parent = (ViewGroup) parent1.getChildAt(0);
         ViewGroupOverlay overlay = parent.getOverlay();
         overlay.clear();
     }
@@ -791,7 +802,15 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
     public void dismiss() {
         if (mPopupWindow != null) {
             mPopupWindow.dismiss();
+            mIsShow = false;
         }
+    }
+
+    /**
+     * @return 是否在显示
+     */
+    public boolean isShow() {
+        return mIsShow;
     }
 
     @Override
@@ -806,6 +825,7 @@ public class EasyPopup implements PopupWindow.OnDismissListener {
         if (mOnDismissListener != null) {
             mOnDismissListener.onDismiss();
         }
+        mIsShow = false;
 
         removeGlobalLayoutListener();
         //清除背景变暗

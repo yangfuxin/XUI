@@ -4,9 +4,6 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
@@ -27,6 +24,10 @@ import android.widget.ImageView;
 import android.widget.ListPopupWindow;
 import android.widget.PopupWindow;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.utils.ResUtils;
@@ -44,33 +45,36 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
     /**
      * 最大行数
      */
-    private final static int DEFAULT_MAX_LINE = 1;
+    private static final int DEFAULT_MAX_LINE = 1;
+    private static final int TOGGLE_POPUP_WINDOW_INTERVAL = 200;
     private EditText mEditText;
     private ImageView mIvArrow;
     private ListPopupWindow mPopupWindow;
     private BaseEditSpinnerAdapter mAdapter;
-    private long popupWindowHideTime;
+    private long mPopupWindowHideTime;
     private Animation mAnimation;
     private Animation mResetAnimation;
     private AdapterView.OnItemClickListener mOnItemClickListener;
     private int mMaxLine = DEFAULT_MAX_LINE;
     private Drawable mDropDownBg;
+    private int mPopAnimStyle;
 
     private boolean mIsShowFilterData = true;
 
     private boolean mIsFilterKey = false;
 
     public EditSpinner(Context context) {
-        super(context);
-        initView(context);
-        initAttrs(context, null);
-        initAnimation();
+        this(context, null);
     }
 
     public EditSpinner(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, R.attr.EditSpinnerStyle);
+    }
+
+    public EditSpinner(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         initView(context);
-        initAttrs(context, attrs);
+        initAttrs(context, attrs, defStyleAttr);
         initAnimation();
     }
 
@@ -82,48 +86,50 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
         mEditText.addTextChangedListener(this);
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        TypedArray tArray = context.obtainStyledAttributes(attrs, R.styleable.EditSpinner);
-        if (tArray != null) {
-            mIsShowFilterData = tArray.getBoolean(R.styleable.EditSpinner_es_isShowFilterData, true);
-            mIsFilterKey = tArray.getBoolean(R.styleable.EditSpinner_es_isFilterKey, false);
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.EditSpinner, defStyleAttr, 0);
+        if (typedArray != null) {
+            mIsShowFilterData = typedArray.getBoolean(R.styleable.EditSpinner_es_isShowFilterData, true);
+            mIsFilterKey = typedArray.getBoolean(R.styleable.EditSpinner_es_isFilterKey, false);
 
-            int imageId = tArray.getResourceId(R.styleable.EditSpinner_es_arrowImage, 0);
+            int imageId = typedArray.getResourceId(R.styleable.EditSpinner_es_arrowImage, 0);
             if (imageId != 0) {
                 mIvArrow.setImageResource(imageId);
             }
-            int arrowMargin = tArray.getDimensionPixelSize(R.styleable.EditSpinner_es_arrowMargin, -1);
+            int arrowMargin = typedArray.getDimensionPixelSize(R.styleable.EditSpinner_es_arrowMargin, -1);
             if (arrowMargin != -1) {
                 FrameLayout.LayoutParams params = (LayoutParams) mIvArrow.getLayoutParams();
                 params.setMargins(arrowMargin, 0, arrowMargin, 0);
                 mIvArrow.setLayoutParams(params);
             }
-            mEditText.setHint(tArray.getString(R.styleable.EditSpinner_es_hint));
-            int bg = tArray.getResourceId(R.styleable.EditSpinner_es_background, 0);
+            mEditText.setHint(typedArray.getString(R.styleable.EditSpinner_es_hint));
+            int bg = typedArray.getResourceId(R.styleable.EditSpinner_es_background, 0);
             if (bg != 0) {
                 mEditText.setBackgroundResource(bg);
             }
-            mMaxLine = tArray.getInt(R.styleable.EditSpinner_es_maxLine, DEFAULT_MAX_LINE);
+            mMaxLine = typedArray.getInt(R.styleable.EditSpinner_es_maxLine, DEFAULT_MAX_LINE);
             mEditText.setMaxLines(mMaxLine);
-            int height = tArray.getDimensionPixelSize(R.styleable.EditSpinner_es_height, ThemeUtils.resolveDimension(getContext(), R.attr.ms_item_height_size));
+            int height = typedArray.getDimensionPixelSize(R.styleable.EditSpinner_es_height, ThemeUtils.resolveDimension(getContext(), R.attr.ms_item_height_size));
             mEditText.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height));
-            setTextColors(tArray.getColorStateList(R.styleable.EditSpinner_es_textColor));
-            setTextSize(tArray.getDimensionPixelSize(R.styleable.EditSpinner_es_textSize, ThemeUtils.resolveDimension(getContext(), R.attr.xui_config_size_spinner_text)));
-            int entriesID = tArray.getResourceId(R.styleable.EditSpinner_es_entries, 0);
+            setTextColors(typedArray.getColorStateList(R.styleable.EditSpinner_es_textColor));
+            setTextSize(typedArray.getDimensionPixelSize(R.styleable.EditSpinner_es_textSize, ThemeUtils.resolveDimension(getContext(), R.attr.xui_config_size_spinner_text)));
+            int entriesID = typedArray.getResourceId(R.styleable.EditSpinner_es_entries, 0);
             if (entriesID != 0) {
                 setItems(ResUtils.getStringArray(entriesID));
             }
-            mDropDownBg = tArray.getDrawable(R.styleable.EditSpinner_es_dropdown_bg);
-            boolean enable = tArray.getBoolean(R.styleable.EditSpinner_es_enable, true);
+            mDropDownBg = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.EditSpinner_es_dropdown_bg);
+            boolean enable = typedArray.getBoolean(R.styleable.EditSpinner_es_enable, true);
             setEnabled(enable);
 
-            int maxLength = tArray.getInteger(R.styleable.EditSpinner_es_maxLength, -1);
+            int maxLength = typedArray.getInteger(R.styleable.EditSpinner_es_maxLength, -1);
             setMaxLength(maxLength);
 
-            int maxEms = tArray.getInteger(R.styleable.EditSpinner_es_maxEms, -1);
+            int maxEms = typedArray.getInteger(R.styleable.EditSpinner_es_maxEms, -1);
             setMaxEms(maxEms);
 
-            tArray.recycle();
+            mPopAnimStyle = typedArray.getResourceId(R.styleable.EditSpinner_es_popAnimStyle, -1);
+
+            typedArray.recycle();
         }
     }
 
@@ -157,6 +163,9 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
             }
 
         };
+        if (mPopAnimStyle != -1) {
+            mPopupWindow.setAnimationStyle(mPopAnimStyle);
+        }
         mPopupWindow.setOnItemClickListener(this);
         mPopupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
         mPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
@@ -169,7 +178,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                popupWindowHideTime = System.currentTimeMillis();
+                mPopupWindowHideTime = System.currentTimeMillis();
                 mIvArrow.startAnimation(mResetAnimation);
             }
         });
@@ -187,7 +196,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
     }
 
     private void togglePopupWindow() {
-        if (System.currentTimeMillis() - popupWindowHideTime > 200) {
+        if (System.currentTimeMillis() - mPopupWindowHideTime > TOGGLE_POPUP_WINDOW_INTERVAL) {
             if (mAdapter == null || mPopupWindow == null) {
                 return;
             }
@@ -220,7 +229,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
     public final void afterTextChanged(Editable s) {
         String key = s.toString();
         mEditText.setSelection(key.length());
-        if (!TextUtils.isEmpty(key) ) {
+        if (!TextUtils.isEmpty(key)) {
             if (mIsShowFilterData) {
                 showFilterData(key);
             }
@@ -259,6 +268,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置默认可选项集合
+     *
      * @param data
      * @return
      */
@@ -273,6 +283,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置默认可选项集合
+     *
      * @param data
      * @return
      */
@@ -287,6 +298,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置下拉框条目点击监听
+     *
      * @param listener
      * @return
      */
@@ -297,6 +309,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置默认内容
+     *
      * @param text
      * @return
      */
@@ -311,6 +324,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框字体的颜色
+     *
      * @param colors
      * @return
      */
@@ -326,6 +340,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框字体的颜色
+     *
      * @param color
      * @return
      */
@@ -341,6 +356,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的背景颜色
+     *
      * @param backgroundSelector
      * @return
      */
@@ -353,6 +369,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置是否显示key为醒目的颜色
+     *
      * @param isFilterKey
      * @return
      */
@@ -367,6 +384,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的字体大小
+     *
      * @param textSize
      * @return
      */
@@ -382,6 +400,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的提示信息
+     *
      * @param hint
      * @return
      */
@@ -401,6 +420,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置箭头图片
+     *
      * @param res
      * @return
      */
@@ -413,6 +433,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置下拉框适配器
+     *
      * @param adapter
      * @return
      */
@@ -424,6 +445,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框最大的行数
+     *
      * @param maxLine
      * @return
      */
@@ -437,6 +459,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的高度
+     *
      * @param dp
      * @return
      */
@@ -449,6 +472,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的宽度
+     *
      * @param dp
      * @return
      */
@@ -461,6 +485,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置enable
+     *
      * @param enabled
      * @return
      */
@@ -476,6 +501,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的最大字符长度
+     *
      * @param maxLength
      * @return
      */
@@ -489,6 +515,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入框的最大字符宽度
+     *
      * @param maxEms
      * @return
      */
@@ -501,6 +528,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 增加文字监听
+     *
      * @param watcher
      * @return
      */
@@ -513,6 +541,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 设置输入的类型
+     *
      * @param type
      * @return
      */
@@ -525,6 +554,7 @@ public class EditSpinner extends FrameLayout implements View.OnClickListener, Ad
 
     /**
      * 获取输入框控件
+     *
      * @return
      */
     public EditText getEditText() {

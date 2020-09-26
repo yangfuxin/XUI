@@ -3,9 +3,10 @@ package com.xuexiang.xui.widget.popupwindow.popup;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.webkit.WebView;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import com.xuexiang.xui.R;
@@ -22,21 +23,21 @@ import com.xuexiang.xui.widget.XUIWrapContentListView;
  */
 public class XUIListPopup<T extends XUIListPopup> extends XUIPopup {
     protected ListView mListView;
-    protected BaseAdapter mAdapter;
+    protected ListAdapter mAdapter;
     private boolean mHasDivider;
 
     /**
-     * Constructor.
+     * 构造方法.
      *
      * @param context   Context
      * @param direction
      */
-    public XUIListPopup(Context context, int direction, BaseAdapter adapter) {
+    public XUIListPopup(Context context, int direction, ListAdapter adapter) {
         super(context, direction);
         mAdapter = adapter;
     }
 
-    public XUIListPopup(Context context, BaseAdapter adapter) {
+    public XUIListPopup(Context context, ListAdapter adapter) {
         super(context);
         mAdapter = adapter;
     }
@@ -78,6 +79,7 @@ public class XUIListPopup<T extends XUIListPopup> extends XUIPopup {
         mListView.setPadding(margin, 0, margin, 0);
         mListView.setAdapter(mAdapter);
         mListView.setVerticalScrollBarEnabled(false);
+        mListView.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
         updateListViewDivider(mListView);
         setContentView(mListView);
         return (T) this;
@@ -127,7 +129,9 @@ public class XUIListPopup<T extends XUIListPopup> extends XUIPopup {
      * @return
      */
     public T setDivider(Drawable divider) {
-        mListView.setDivider(divider);
+        if (mListView != null) {
+            mListView.setDivider(divider);
+        }
         return (T) this;
     }
 
@@ -138,12 +142,17 @@ public class XUIListPopup<T extends XUIListPopup> extends XUIPopup {
      * @return
      */
     public T setDividerHeight(int dividerHeight) {
-        mListView.setDividerHeight(dividerHeight);
+        if (mListView != null) {
+            mListView.setDividerHeight(dividerHeight);
+        }
         return (T) this;
     }
 
-    public BaseAdapter getAdapter() {
+    public ListAdapter getAdapter() {
         return mAdapter;
     }
 
+    public ListView getListView() {
+        return mListView;
+    }
 }

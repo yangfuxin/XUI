@@ -9,6 +9,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.UIConsts;
+import com.xuexiang.xui.XUI;
+import com.xuexiang.xui.utils.ResUtils;
 
 /**
  * 提供一个浮层，支持自定义浮层的内容，支持在指定 {@link View} 的任一方向旁边展示该浮层，支持自定义浮层出现/消失的动画。
@@ -17,6 +20,7 @@ import com.xuexiang.xui.R;
  * @since 2019/1/14 下午10:00
  */
 public class XUIPopup extends XUIBasePopup {
+
     public static final int ANIM_GROW_FROM_LEFT = 1;
     public static final int ANIM_GROW_FROM_RIGHT = 2;
     public static final int ANIM_GROW_FROM_CENTER = 3;
@@ -26,10 +30,14 @@ public class XUIPopup extends XUIBasePopup {
     public static final int DIRECTION_BOTTOM = 1;
     public static final int DIRECTION_NONE = 2;
 
-    // 该PopupWindow的View距离屏幕左右的最小距离
+    /**
+     * 该PopupWindow的View距离屏幕左右的最小距离
+     */
     private int mPopupLeftRightMinMargin = 0;
 
-    // 该PopupWindow的View距离屏幕上下的最小距离
+    /**
+     * 该PopupWindow的View距离屏幕上下的最小距离
+     */
     private int mPopupTopBottomMinMargin = 0;
 
     protected ImageView mArrowUp;
@@ -38,16 +46,21 @@ public class XUIPopup extends XUIBasePopup {
     private int mPreferredDirection;
     protected int mDirection;
 
-
     protected int mX = -1;
     protected int mY = -1;
     protected int mArrowCenter;
 
-    // 计算位置后的偏移x值
+    /**
+     * 计算位置后的偏移x值
+     */
     private int mOffsetX = 0;
-    // 计算位置后的偏移y值，当浮层在View的上方时使用
+    /**
+     * 计算位置后的偏移y值，当浮层在View的上方时使用
+     */
     private int mOffsetYWhenTop = 0;
-    // 计算位置后的偏移y值，当浮层在View的下方时使用
+    /**
+     * 计算位置后的偏移y值，当浮层在View的下方时使用
+     */
     private int mOffsetYWhenBottom = 0;
 
     public XUIPopup(Context context) {
@@ -136,11 +149,7 @@ public class XUIPopup extends XUIBasePopup {
             mArrowCenter = attachedViewLocation[0] + attachedView.getWidth() / 2;
             if (mArrowCenter < mScreenSize.x / 2) {
                 //描点在左侧
-                if (mArrowCenter - mWindowWidth / 2 > mPopupLeftRightMinMargin) {
-                    mX = mArrowCenter - mWindowWidth / 2;
-                } else {
-                    mX = mPopupLeftRightMinMargin;
-                }
+                mX = Math.max(mArrowCenter - mWindowWidth / 2, mPopupLeftRightMinMargin);
             } else {//描点在右侧
                 if (mArrowCenter + mWindowWidth / 2 < mScreenSize.x - mPopupLeftRightMinMargin) {
                     mX = mArrowCenter - mWindowWidth / 2;
@@ -168,6 +177,8 @@ public class XUIPopup extends XUIBasePopup {
                 case DIRECTION_NONE:
                     // 默认Y值与attachedView的Y值相同
                     mY = attachedViewLocation[1];
+                    break;
+                default:
                     break;
             }
         } else {
@@ -209,7 +220,8 @@ public class XUIPopup extends XUIBasePopup {
                 } else {
                     getPopupWindow().setAnimationStyle(onTop ? R.style.XUI_Animation_PopUpMenu_Right : R.style.XUI_Animation_PopDownMenu_Right);
                 }
-
+                break;
+            default:
                 break;
         }
     }
@@ -257,13 +269,13 @@ public class XUIPopup extends XUIBasePopup {
 
     @Override
     public void setContentView(View root) {
-        FrameLayout layout = (FrameLayout) LayoutInflater.from(getContext()).inflate(R.layout.xui_layout_popup, null, false);
-        mArrowDown = (ImageView) layout.findViewById(R.id.arrow_down);
-        mArrowUp = (ImageView) layout.findViewById(R.id.arrow_up);
-        FrameLayout box = (FrameLayout) layout.findViewById(R.id.box);
+        FrameLayout container = (FrameLayout) LayoutInflater.from(getContext()).inflate(R.layout.xui_layout_popup, null, false);
+        mArrowDown = container.findViewById(R.id.arrow_down);
+        mArrowUp = container.findViewById(R.id.arrow_up);
+        FrameLayout box = container.findViewById(R.id.box);
         box.addView(root);
 
-        super.setContentView(layout);
+        super.setContentView(container);
     }
 
 
@@ -275,6 +287,48 @@ public class XUIPopup extends XUIBasePopup {
 
     public ViewGroup.LayoutParams generateLayoutParam(int width, int height) {
         return new FrameLayout.LayoutParams(width, height);
+    }
+
+    /**
+     * 向下显示
+     *
+     * @param v
+     */
+    public void showDown(View v) {
+        setPreferredDirection(XUIPopup.DIRECTION_BOTTOM);
+        show(v);
+    }
+
+    /**
+     * 向上显示
+     *
+     * @param v
+     */
+    public void showUp(View v) {
+        setPreferredDirection(XUIPopup.DIRECTION_TOP);
+        show(v);
+    }
+
+    /**
+     * @return 获取弹出窗的宽度
+     */
+    protected int getPopupWidth() {
+        int width;
+        switch (XUI.getScreenType()) {
+            case UIConsts.ScreenType.BIG_TABLET:
+                width = ResUtils.getDimensionPixelSize(R.dimen.xui_popup_width_tablet_big);
+                break;
+            case UIConsts.ScreenType.SMALL_TABLET:
+                width = ResUtils.getDimensionPixelSize(R.dimen.xui_popup_width_tablet_small);
+                break;
+            case UIConsts.ScreenType.PHONE:
+                width = ResUtils.getDimensionPixelSize(R.dimen.xui_popup_width_phone);
+                break;
+            default:
+                width = ResUtils.getDimensionPixelSize(R.dimen.xui_popup_width_tablet_small);
+                break;
+        }
+        return width;
     }
 
 }

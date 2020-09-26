@@ -17,12 +17,14 @@
 package com.xuexiang.xuidemo.fragment.components.tabbar;
 
 import android.content.Intent;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
@@ -30,7 +32,8 @@ import com.xuexiang.xui.widget.tabbar.EasyIndicator;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.activity.EasyIndicatorActivity;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.fragment.components.tabbar.tablayout.ContentPage;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +71,7 @@ public class EasyIndicatorFragment extends BaseFragment {
 
     private PagerAdapter mPagerAdapter = new PagerAdapter() {
         @Override
-        public boolean isViewFromObject(View view, Object object) {
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
             return view == object;
         }
 
@@ -87,7 +90,7 @@ public class EasyIndicatorFragment extends BaseFragment {
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
+        public void destroyItem(ViewGroup container, int position, @NonNull Object object) {
             container.removeView((View) object);
         }
     };
@@ -114,7 +117,7 @@ public class EasyIndicatorFragment extends BaseFragment {
     protected void initViews() {
         mEasyIndicator.setTabTitles(ContentPage.getPageNames());
         mEasyIndicator.setViewPager(mViewPager, mPagerAdapter);
-        mViewPager.setOffscreenPageLimit(ContentPage.size());
+        mViewPager.setOffscreenPageLimit(ContentPage.size() - 1);
         mViewPager.setCurrentItem(2);
 
 
@@ -123,12 +126,7 @@ public class EasyIndicatorFragment extends BaseFragment {
 
     private void initIndicatorNoViewPager() {
         mEasyIndicator1.setTabTitles(ContentPage.getPageNames());
-        mEasyIndicator1.setOnTabClickListener(new EasyIndicator.onTabClickListener() {
-            @Override
-            public void onTabClick(String title, int position) {
-                ToastUtils.toast("点击了" + title);
-            }
-        });
+        mEasyIndicator1.setOnTabClickListener((title, position) -> XToastUtils.toast("点击了" + title));
 
     }
 

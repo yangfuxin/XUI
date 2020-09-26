@@ -19,15 +19,17 @@ package com.xuexiang.xuidemo.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
-import com.scwang.smartrefresh.layout.adapter.BaseRecyclerAdapter;
+import com.xuexiang.xaop.annotation.SingleClick;
+import com.xuexiang.xui.adapter.recyclerview.XRecyclerAdapter;
 import com.xuexiang.xui.widget.imageview.nine.ItemImageClickListener;
 import com.xuexiang.xui.widget.imageview.nine.NineGridImageView;
 import com.xuexiang.xui.widget.imageview.nine.NineGridImageViewAdapter;
@@ -36,6 +38,7 @@ import com.xuexiang.xui.widget.imageview.preview.loader.GlideMediaLoader;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.fragment.components.imageview.preview.ImageViewInfo;
 import com.xuexiang.xuidemo.fragment.components.imageview.preview.NineGridInfo;
+import com.xuexiang.xuidemo.utils.SettingSPUtils;
 
 import java.util.List;
 
@@ -45,16 +48,21 @@ import java.util.List;
  * @author xuexiang
  * @since 2018/12/9 下午11:51
  */
-public class NineGridRecycleAdapter extends BaseRecyclerAdapter<NineGridInfo, NineGridRecycleAdapter.NineGridHolder> {
+public class NineGridRecycleAdapter extends XRecyclerAdapter<NineGridInfo, NineGridRecycleAdapter.NineGridHolder> {
 
     @NonNull
     @Override
-    public NineGridHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    protected NineGridHolder getViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == NineGridImageView.STYLE_GRID) {
-            return new NineGridHolder(getInflate(parent, R.layout.adapter_item_nine_grid_grid_style));
+            return new NineGridHolder(inflateView(parent, R.layout.adapter_item_nine_grid_grid_style));
         } else {
-            return new NineGridHolder(getInflate(parent, R.layout.adapter_item_nine_grid_fill_style));
+            return new NineGridHolder(inflateView(parent, R.layout.adapter_item_nine_grid_fill_style));
         }
+    }
+
+    @Override
+    protected void bindData(@NonNull NineGridHolder holder, int position, NineGridInfo item) {
+        holder.bind(item);
     }
 
     @Override
@@ -62,16 +70,15 @@ public class NineGridRecycleAdapter extends BaseRecyclerAdapter<NineGridInfo, Ni
         return getItem(position).getShowType();
     }
 
-    @Override
-    protected void onBindViewHolder(NineGridHolder holder, NineGridInfo model, int position) {
-        holder.bind(model);
-    }
 
-
-    public class NineGridHolder extends RecyclerView.ViewHolder {
+    public static class NineGridHolder extends RecyclerView.ViewHolder {
         private NineGridImageView<ImageViewInfo> mNglContent;
         private TextView mTvContent;
-        private NineGridImageViewAdapter<ImageViewInfo> mAdapter = new NineGridImageViewAdapter<ImageViewInfo>() {
+
+        public NineGridHolder(View itemView) {
+            super(itemView);
+            mTvContent = itemView.findViewById(R.id.tv_content);
+            mNglContent = itemView.findViewById(R.id.ngl_images);
             /**
              * 图片加载
              *
@@ -79,32 +86,37 @@ public class NineGridRecycleAdapter extends BaseRecyclerAdapter<NineGridInfo, Ni
              * @param imageView
              * @param imageViewInfo 图片信息
              */
-            @Override
-            protected void onDisplayImage(Context context, ImageView imageView, ImageViewInfo imageViewInfo) {
-                Glide.with(imageView.getContext())
-                        .load(imageViewInfo.getUrl())
-                        .apply(GlideMediaLoader.getRequestOptions())
-                        .into(imageView);
-            }
+            NineGridImageViewAdapter<ImageViewInfo> mAdapter = new NineGridImageViewAdapter<ImageViewInfo>() {
+                /**
+                 * 图片加载
+                 *
+                 * @param context
+                 * @param imageView
+                 * @param imageViewInfo 图片信息
+                 */
+                @Override
+                protected void onDisplayImage(Context context, ImageView imageView, ImageViewInfo imageViewInfo) {
+                    Glide.with(imageView.getContext())
+                            .load(imageViewInfo.getUrl())
+                            .apply(GlideMediaLoader.getRequestOptions())
+                            .into(imageView);
+                }
 
-            @Override
-            protected ImageView generateImageView(Context context) {
-                return super.generateImageView(context);
-            }
-        };
-
-        public NineGridHolder(View itemView) {
-            super(itemView);
-            mTvContent = itemView.findViewById(R.id.tv_content);
-            mNglContent = itemView.findViewById(R.id.ngl_images);
+                @Override
+                protected ImageView generateImageView(Context context) {
+                    return super.generateImageView(context);
+                }
+            };
             mNglContent.setAdapter(mAdapter);
             mNglContent.setItemImageClickListener(new ItemImageClickListener<ImageViewInfo>() {
+                @SingleClick
                 @Override
-                public void onItemImageClick(Context context, ImageView imageView, int index, List<ImageViewInfo> list) {
+                public void onItemImageClick(ImageView imageView, int index, List<ImageViewInfo> list) {
                     computeBoundsBackward(list);//组成数据
-                    PreviewBuilder.from((Activity) context)
+                    PreviewBuilder.from((Activity) imageView.getContext())
                             .setImgs(list)
                             .setCurrentIndex(index)
+                            .setProgressColor(SettingSPUtils.getInstance().isUseCustomTheme() ? R.color.custom_color_main_theme : R.color.xui_config_color_main_theme)
                             .setType(PreviewBuilder.IndicatorType.Dot)
                             .start();//启动
                 }

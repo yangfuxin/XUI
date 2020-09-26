@@ -14,28 +14,25 @@
   ~ limitations under the License.
   -->
 
-<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="?attr/xui_actionbar_height"
-    android:background="?attr/colorPrimary"
+    android:background="?attr/colorAccent"
     app:contentInsetLeft="0dp"
     app:contentInsetStart="0dp"
     app:titleTextColor="@android:color/white">
 
     <RelativeLayout
         android:layout_width="match_parent"
+        android:background="?attr/colorAccent"
         android:layout_height="match_parent">
 
-        <ImageView
+        <com.xuexiang.xui.widget.alpha.XUIAlphaImageView
             android:id="@+id/iv_back"
             android:layout_width="55dp"
             android:layout_height="match_parent"
             android:layout_centerVertical="true"
-            android:background="@drawable/bg_back_selector"
-            android:clickable="true"
-            android:focusable="true"
             android:scaleType="center"
             android:src="@drawable/ic_web_back" />
 
@@ -45,15 +42,14 @@
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
-            android:layout_toEndOf="@+id/iv_back"
+            android:layout_toEndOf="@id/iv_back"
             android:background="@color/xui_config_color_white" />
 
-        <ImageView
+        <com.xuexiang.xui.widget.alpha.XUIAlphaImageView
             android:id="@+id/iv_finish"
             android:layout_width="55dp"
             android:layout_height="match_parent"
-            android:layout_toEndOf="@+id/view_line"
-            android:background="@drawable/bg_back_selector"
+            android:layout_toEndOf="@id/view_line"
             android:scaleType="center"
             android:src="@drawable/ic_web_close" />
 
@@ -66,16 +62,15 @@
             android:textColor="@android:color/white"
             android:textSize="14sp" />
 
-        <ImageView
+        <com.xuexiang.xui.widget.alpha.XUIAlphaImageView
             android:id="@+id/iv_more"
             android:layout_width="55dp"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:background="@drawable/bg_back_selector"
             android:scaleType="center"
             android:src="@drawable/ic_web_more" />
     </RelativeLayout>
 
 
-</android.support.v7.widget.Toolbar>
+</androidx.appcompat.widget.Toolbar>
 

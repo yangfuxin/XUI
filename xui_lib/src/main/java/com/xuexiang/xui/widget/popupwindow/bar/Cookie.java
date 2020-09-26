@@ -18,9 +18,6 @@ package com.xuexiang.xui.widget.popupwindow.bar;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -32,6 +29,10 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.ThemeUtils;
@@ -49,7 +50,6 @@ final class Cookie extends LinearLayout {
      */
     public static final long DEFAULT_COOKIE_DURATION = 2000;
 
-    private Animation mSlideInAnimation;
     private Animation mSlideOutAnimation;
 
     private LinearLayout mLayoutCookie;
@@ -211,7 +211,7 @@ final class Cookie extends LinearLayout {
     }
 
     private void createInAnim() {
-        mSlideInAnimation = AnimationUtils.loadAnimation(getContext(),
+        Animation mSlideInAnimation = AnimationUtils.loadAnimation(getContext(),
                 mGravity == Gravity.BOTTOM ? R.anim.cookiebar_slide_in_from_bottom : R.anim.cookiebar_slide_in_from_top);
         mSlideInAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override

@@ -1,7 +1,7 @@
 package com.xuexiang.xui.widget.activity;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.LinearLayout;
@@ -19,15 +19,13 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
     /**
      * 默认启动页过渡时间
      */
-    private static final int DEFAULT_SPLASH_DURATION_MILLIS = 2000;
+    private static final int DEFAULT_SPLASH_DURATION_MILLIS = 500;
 
     protected LinearLayout mWelcomeLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //解决白屏问题
-        getWindow().setBackgroundDrawable(null);
         initView();
         initSplashView(getSplashImgResId());
         onCreateActivity();

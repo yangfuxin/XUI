@@ -1,23 +1,33 @@
 package com.xuexiang.xui.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ArrayRes;
-import android.support.annotation.AttrRes;
-import android.support.annotation.ColorInt;
-import android.support.annotation.ColorRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.View;
 
+import androidx.annotation.ArrayRes;
+import androidx.annotation.AttrRes;
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.ContextCompat;
+
 import com.xuexiang.xui.widget.dialog.materialdialog.GravityEnum;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * 主题工具
@@ -72,13 +82,26 @@ public final class ThemeUtils {
         }
     }
 
-    public static float getFloatFromAttrRes(Context context, int attrRes) {
+    public static float resolveFloat(Context context, int attrRes) {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(attrRes, typedValue, true);
         return typedValue.getFloat();
     }
 
-    public static float getFloatFromAttrRes(Context context, int attrRes, float defaultValue){
+    public static int resolveInt(Context context, int attrRes) {
+        return resolveInt(context, attrRes, 0);
+    }
+
+    public static int resolveInt(Context context, int attrRes, int defaultValue) {
+        TypedArray a = context.obtainStyledAttributes(new int[]{attrRes});
+        try {
+            return a.getInt(0, defaultValue);
+        } finally {
+            a.recycle();
+        }
+    }
+
+    public static float resolveFloat(Context context, int attrRes, float defaultValue) {
         TypedArray a = context.obtainStyledAttributes(new int[]{attrRes});
         try {
             return a.getFloat(0, defaultValue);
@@ -152,6 +175,13 @@ public final class ThemeUtils {
         return (String) v.string;
     }
 
+    public static String resolveString(Context context, @AttrRes int attr, String defaultValue) {
+        TypedValue v = new TypedValue();
+        context.getTheme().resolveAttribute(attr, v, true);
+        String value = (String) v.string;
+        return TextUtils.isEmpty(value) ? defaultValue : value;
+    }
+
     public static String resolveString(Resources.Theme theme, @AttrRes int attr) {
         TypedValue v = new TypedValue();
         theme.resolveAttribute(attr, v, true);
@@ -167,15 +197,23 @@ public final class ThemeUtils {
             Context context,
             @AttrRes int attr,
             @SuppressWarnings("SameParameterValue") Drawable fallback) {
-        TypedArray a = context.getTheme().obtainStyledAttributes(new int[]{attr});
+        TypedArray array = context.getTheme().obtainStyledAttributes(new int[]{attr});
         try {
-            Drawable d = a.getDrawable(0);
-            if (d == null && fallback != null) {
-                d = fallback;
+            Drawable drawable = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                drawable = array.getDrawable(0);
+            } else {
+                int id = array.getResourceId(0, -1);
+                if (id != -1) {
+                    drawable = AppCompatResources.getDrawable(context, id);
+                }
             }
-            return d;
+            if (drawable == null && fallback != null) {
+                drawable = fallback;
+            }
+            return drawable;
         } finally {
-            a.recycle();
+            array.recycle();
         }
     }
 
@@ -261,6 +299,61 @@ public final class ThemeUtils {
             }
         }
         return false;
+    }
+
+    //========================深色模式==============================//
+    /**
+     * 系统默认模式
+     */
+    public static final int DEFAULT_MODE = 0;
+    /**
+     * 浅色模式
+     */
+    public static final int LIGHT_MODE = 1;
+    /**
+     * 深色模式
+     */
+    public static final int DARK_MODE = 2;
+
+    @IntDef({DEFAULT_MODE, LIGHT_MODE, DARK_MODE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Theme {
+    }
+
+    /**
+     * 当前是否是处于深色模式
+     *
+     * @return 是否是深色模式
+     */
+    public static boolean isNightMode() {
+        int mode = ResUtils.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return mode == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /**
+     * 设置应用的主题（深色模式）
+     *
+     * @param theme 主题类型
+     */
+    @SuppressLint("WrongConstant")
+    public static void applyTheme(@Theme int theme) {
+        switch (theme) {
+            case LIGHT_MODE:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case DARK_MODE:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            case DEFAULT_MODE:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     //=================//

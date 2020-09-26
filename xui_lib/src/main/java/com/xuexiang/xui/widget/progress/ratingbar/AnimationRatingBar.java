@@ -3,8 +3,9 @@ package com.xuexiang.xui.widget.progress.ratingbar;
 import android.content.Context;
 import android.os.Handler;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+
+import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
@@ -40,12 +41,12 @@ public class AnimationRatingBar extends RatingBar {
         mHandler = new Handler();
     }
 
-    protected void postRunnable(Runnable runnable, long ANIMATION_DELAY) {
+    protected void postRunnable(Runnable runnable, long animationDelay) {
         if (mHandler == null) {
             mHandler = new Handler();
         }
 
-        long timeMillis = SystemClock.uptimeMillis() + ANIMATION_DELAY;
+        long timeMillis = SystemClock.uptimeMillis() + animationDelay;
         mHandler.postAtTime(runnable, mRunnableToken, timeMillis);
     }
 

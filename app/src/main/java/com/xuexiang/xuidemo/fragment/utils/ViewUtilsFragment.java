@@ -19,7 +19,9 @@ package com.xuexiang.xuidemo.fragment.utils;
 import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.ComponentContainerFragment;
+import com.xuexiang.xuidemo.fragment.utils.view.ObjectAnimationFragment;
 import com.xuexiang.xuidemo.fragment.utils.view.ViewAnimationFragment;
+import com.xuexiang.xuidemo.fragment.utils.view.ViewCustomAnimationFragment;
 import com.xuexiang.xuidemo.fragment.utils.view.ViewPaddingFragment;
 
 /**
@@ -32,7 +34,9 @@ public class ViewUtilsFragment extends ComponentContainerFragment {
     protected Class[] getPagesClasses() {
         return new Class[]{
                 ViewAnimationFragment.class,
-                ViewPaddingFragment.class
+                ViewPaddingFragment.class,
+                ObjectAnimationFragment.class,
+                ViewCustomAnimationFragment.class
         };
     }
 }

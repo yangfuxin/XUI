@@ -16,7 +16,6 @@
 
 package com.xuexiang.xuidemo.fragment.expands.qrcode;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -27,11 +26,12 @@ import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xpage.base.XPageFragment;
 import com.xuexiang.xpage.enums.CoreAnim;
 import com.xuexiang.xqrcode.XQRCode;
+import com.xuexiang.xqrcode.camera.CameraManager;
 import com.xuexiang.xqrcode.ui.CaptureActivity;
 import com.xuexiang.xqrcode.ui.CaptureFragment;
 import com.xuexiang.xqrcode.util.QRCodeAnalyzeUtils;
 import com.xuexiang.xuidemo.R;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import butterknife.OnClick;
 
@@ -46,7 +46,9 @@ import static android.app.Activity.RESULT_OK;
  */
 @Page(name = "自定义二维码扫描", anim = CoreAnim.none)
 public class CustomCaptureFragment extends XPageFragment {
-    public static boolean isOpen = false;
+
+    private boolean mIsOpen;
+
     /**
      * 布局的资源id
      *
@@ -65,17 +67,11 @@ public class CustomCaptureFragment extends XPageFragment {
         // 为二维码扫描界面设置定制化界面
         CaptureFragment captureFragment = XQRCode.getCaptureFragment(R.layout.layout_custom_camera);
         captureFragment.setAnalyzeCallback(analyzeCallback);
-        captureFragment.setCameraInitCallBack(new CaptureFragment.CameraInitCallBack() {
-            @Override
-            public void callBack(Exception e) {
-                if (e != null) {
-                    CaptureActivity.showNoPermissionTip(getActivity(), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            popToBack();
-                        }
-                    });
-                }
+        captureFragment.setCameraInitCallBack(e -> {
+            if (e != null) {
+                CaptureActivity.showNoPermissionTip(getActivity(), (dialog, which) -> popToBack());
+            } else {
+                mIsOpen = XQRCode.isFlashLightOpen();
             }
         });
         getChildFragmentManager().beginTransaction().replace(R.id.fl_my_container, captureFragment).commit();
@@ -119,12 +115,19 @@ public class CustomCaptureFragment extends XPageFragment {
     @OnClick(R.id.ll_flash_light)
     @SingleClick
     void onClickFlashLight(View v) {
-        isOpen = !isOpen;
+        mIsOpen = !mIsOpen;
         try {
-            XQRCode.enableFlashLight(isOpen);
+            XQRCode.switchFlashLight(mIsOpen);
         } catch (RuntimeException e) {
             e.printStackTrace();
-            ToastUtils.toast("设备不支持闪光灯!");
+            XToastUtils.error("设备不支持闪光灯!");
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        //恢复设置
+        CameraManager.FRAME_MARGIN_TOP = -1;
+        super.onDestroyView();
     }
 }

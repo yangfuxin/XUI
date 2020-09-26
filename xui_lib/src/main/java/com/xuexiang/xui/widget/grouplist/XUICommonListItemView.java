@@ -19,8 +19,6 @@ package com.xuexiang.xui.widget.grouplist;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.IntDef;
-import android.support.v4.widget.Space;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -33,7 +31,10 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Space;
 import android.widget.TextView;
+
+import androidx.annotation.IntDef;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.DensityUtils;
@@ -188,7 +189,7 @@ public class XUICommonListItemView extends RelativeLayout {
 
 
     public void updateImageViewLp(LayoutParamConfig lpConfig) {
-        if(lpConfig != null){
+        if (lpConfig != null) {
             LayoutParams lp = (LayoutParams) mImageView.getLayoutParams();
             mImageView.setLayoutParams(lpConfig.onConfig(lp));
         }
@@ -341,6 +342,8 @@ public class XUICommonListItemView extends RelativeLayout {
             // 清空所有accessoryView
             case ACCESSORY_TYPE_NONE:
                 mAccessoryView.setVisibility(GONE);
+                break;
+            default:
                 break;
         }
     }

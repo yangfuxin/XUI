@@ -22,11 +22,6 @@ import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.StyleRes;
-import android.support.annotation.UiThread;
-import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.text.method.LinkMovementMethod;
 import android.text.method.PasswordTransformationMethod;
@@ -34,13 +29,15 @@ import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
-import android.widget.TextView;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.StyleRes;
+import androidx.annotation.UiThread;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.ResUtils;
@@ -79,28 +76,28 @@ class DialogInit {
     @LayoutRes
     static int getInflateLayout(MaterialDialog.Builder builder) {
         if (builder.customView != null) {
-            return R.layout.md_dialog_custom;
+            return R.layout.md_layout_dialog_custom;
         } else if (builder.items != null || builder.adapter != null) {
             if (builder.checkBoxPrompt != null) {
-                return R.layout.md_dialog_list_check;
+                return R.layout.md_layout_dialog_list_check;
             }
-            return R.layout.md_dialog_list;
+            return R.layout.md_layout_dialog_list;
         } else if (builder.progress > -2) {
-            return R.layout.md_dialog_progress;
+            return R.layout.md_layout_dialog_progress;
         } else if (builder.indeterminateProgress) {
             if (builder.indeterminateIsHorizontalProgress) {
-                return R.layout.md_dialog_progress_indeterminate_horizontal;
+                return R.layout.md_layout_dialog_progress_indeterminate_horizontal;
             }
-            return R.layout.md_dialog_progress_indeterminate;
+            return R.layout.md_layout_dialog_progress_indeterminate;
         } else if (builder.inputCallback != null) {
             if (builder.checkBoxPrompt != null) {
-                return R.layout.md_dialog_input_check;
+                return R.layout.md_layout_dialog_input_check;
             }
-            return R.layout.md_dialog_input;
+            return R.layout.md_layout_dialog_input;
         } else if (builder.checkBoxPrompt != null) {
-            return R.layout.md_dialog_basic_check;
+            return R.layout.md_layout_dialog_basic_check;
         } else {
-            return R.layout.md_dialog_basic;
+            return R.layout.md_layout_dialog_basic;
         }
     }
 
@@ -167,17 +164,17 @@ class DialogInit {
         }
 
         // Retrieve references to views
-        dialog.title = (TextView) dialog.view.findViewById(R.id.md_title);
-        dialog.icon = (ImageView) dialog.view.findViewById(R.id.md_icon);
+        dialog.title = dialog.view.findViewById(R.id.md_title);
+        dialog.icon = dialog.view.findViewById(R.id.md_icon);
         dialog.titleFrame = dialog.view.findViewById(R.id.md_titleFrame);
-        dialog.content = (TextView) dialog.view.findViewById(R.id.md_content);
-        dialog.recyclerView = (RecyclerView) dialog.view.findViewById(R.id.md_contentRecyclerView);
-        dialog.checkBoxPrompt = (CheckBox) dialog.view.findViewById(R.id.md_promptCheckbox);
+        dialog.content = dialog.view.findViewById(R.id.md_content);
+        dialog.recyclerView = dialog.view.findViewById(R.id.md_contentRecyclerView);
+        dialog.checkBoxPrompt = dialog.view.findViewById(R.id.md_promptCheckbox);
 
         // Button views initially used by checkIfStackingNeeded()
-        dialog.positiveButton = (MDButton) dialog.view.findViewById(R.id.md_buttonDefaultPositive);
-        dialog.neutralButton = (MDButton) dialog.view.findViewById(R.id.md_buttonDefaultNeutral);
-        dialog.negativeButton = (MDButton) dialog.view.findViewById(R.id.md_buttonDefaultNegative);
+        dialog.positiveButton = dialog.view.findViewById(R.id.md_buttonDefaultPositive);
+        dialog.neutralButton = dialog.view.findViewById(R.id.md_buttonDefaultNeutral);
+        dialog.negativeButton = dialog.view.findViewById(R.id.md_buttonDefaultNegative);
 
         // Don't allow the submit button to not be shown for input dialogs
         if (builder.inputCallback != null && builder.positiveText == null) {
@@ -472,7 +469,7 @@ class DialogInit {
     private static void setupProgressDialog(final MaterialDialog dialog) {
         final MaterialDialog.Builder builder = dialog.builder;
         if (builder.indeterminateProgress || builder.progress > -2) {
-            dialog.progressBar = (ProgressBar) dialog.view.findViewById(android.R.id.progress);
+            dialog.progressBar = dialog.view.findViewById(android.R.id.progress);
             if (dialog.progressBar == null) {
                 return;
             }
@@ -542,7 +539,7 @@ class DialogInit {
 
     private static void setupInputDialog(final MaterialDialog dialog) {
         final MaterialDialog.Builder builder = dialog.builder;
-        dialog.input = (EditText) dialog.view.findViewById(android.R.id.input);
+        dialog.input = dialog.view.findViewById(android.R.id.input);
         if (dialog.input == null) {
             return;
         }
@@ -567,7 +564,7 @@ class DialogInit {
             }
         }
 
-        dialog.inputMinMax = (TextView) dialog.view.findViewById(R.id.md_minMax);
+        dialog.inputMinMax = dialog.view.findViewById(R.id.md_minMax);
         if (builder.inputMinLength > 0 || builder.inputMaxLength > -1) {
             dialog.invalidateInputMinMaxIndicator(
                     dialog.input.getText().toString().length(), !builder.inputAllowEmpty);

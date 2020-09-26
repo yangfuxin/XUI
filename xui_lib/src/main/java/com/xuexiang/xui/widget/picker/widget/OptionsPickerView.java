@@ -17,21 +17,25 @@
 package com.xuexiang.xui.widget.picker.widget;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.widget.picker.widget.configure.PickerOptions;
 
-import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.github.inflationx.calligraphy3.HasTypeface;
 
 /**
  * 条件选择器
@@ -39,7 +43,7 @@ import java.util.List;
  * @author xuexiang
  * @since 2019/1/1 下午7:09
  */
-public class OptionsPickerView<T> extends BasePickerView implements View.OnClickListener {
+public class OptionsPickerView<T> extends BasePickerView implements View.OnClickListener, HasTypeface {
 
     private WheelOptions<T> wheelOptions;
 
@@ -67,7 +71,7 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
 
             //顶部标题
             TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
-            LinearLayout ll_content = (LinearLayout) findViewById(R.id.ll_content);
+            LinearLayout llContent = (LinearLayout) findViewById(R.id.ll_content);
 
             //确定和取消按钮
             Button btnSubmit = (Button) findViewById(R.id.btnSubmit);
@@ -92,7 +96,7 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
                     tvTitle.setVisibility(View.GONE);
                 }
             }
-            ll_content.setBackgroundColor(mPickerOptions.bgColorTitle);
+            llContent.setBackgroundColor(mPickerOptions.bgColorTitle);
 
             //设置文字大小
             btnSubmit.setTextSize(mPickerOptions.textSizeSubmitCancel);
@@ -113,10 +117,11 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
 
         wheelOptions.setTextContentSize(mPickerOptions.textSizeContent);
         wheelOptions.setLabels(mPickerOptions.label1, mPickerOptions.label2, mPickerOptions.label3);
-        wheelOptions.setTextXOffset(mPickerOptions.x_offset_one, mPickerOptions.x_offset_two, mPickerOptions.x_offset_three);
+        wheelOptions.setTextXOffset(mPickerOptions.xOffsetOne, mPickerOptions.xOffsetTwo, mPickerOptions.xOffsetThree);
         wheelOptions.setCyclic(mPickerOptions.cyclic1, mPickerOptions.cyclic2, mPickerOptions.cyclic3);
-        wheelOptions.setTypeface(mPickerOptions.font);
-
+        if (XUI.getDefaultTypeface() == null) {
+            wheelOptions.setTypeface(mPickerOptions.font);
+        }
         setOutSideCancelable(mPickerOptions.cancelable);
 
         wheelOptions.setDividerColor(mPickerOptions.dividerColor);
@@ -169,16 +174,28 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
         }
     }
 
-    public void setPicker(@NonNull T[] optionsItems) {
-        this.setPicker(Arrays.asList(optionsItems), null, null);
-    }
+    //=======================================联动===========================================//
 
     public void setPicker(List<T> optionsItems) {
         this.setPicker(optionsItems, null, null);
     }
 
+    public void setPicker(@NonNull T[] optionsArray) {
+        this.setPicker(Arrays.asList(optionsArray), null, null);
+    }
+
     public void setPicker(List<T> options1Items, List<List<T>> options2Items) {
         this.setPicker(options1Items, options2Items, null);
+    }
+
+    public void setPicker(T[] options1Array,
+                          T[][] options2Array) {
+        List<List<T>> options2Items = new ArrayList<>(options2Array[0].length);
+        for (T[] ts : options2Array) {
+            options2Items.add(Arrays.asList(ts));
+        }
+        wheelOptions.setPicker(Arrays.asList(options1Array), options2Items, null);
+        reSetCurrentItems();
     }
 
     public void setPicker(List<T> options1Items,
@@ -188,10 +205,31 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
         reSetCurrentItems();
     }
 
+    public void setPicker(T[] options1Array,
+                          T[][] options2Array,
+                          T[][][] options3Array) {
+        List<List<T>> options2Items = new ArrayList<>(options2Array[0].length);
+        for (T[] ts : options2Array) {
+            options2Items.add(Arrays.asList(ts));
+        }
+        List<List<List<T>>> options3Items = new ArrayList<>(options3Array[0][0].length);
+        for (T[][] ts2 : options3Array) {
+            List<List<T>> temp = new ArrayList<>(options3Array[0].length);
+            for (T[] ts1 : ts2) {
+                temp.add(Arrays.asList(ts1));
+            }
+            options3Items.add(temp);
+        }
+        wheelOptions.setPicker(Arrays.asList(options1Array), options2Items, options3Items);
+        reSetCurrentItems();
+    }
+
+    //=======================================不联动===========================================//
+
     //不联动情况下调用
-    public void setNPicker(@NonNull T[] options1Items,
-                           @NonNull T[] options2Items) {
-        setNPicker(Arrays.asList(options1Items), Arrays.asList(options2Items));
+    public void setNPicker(@NonNull T[] options1Array,
+                           @NonNull T[] options2Array) {
+        setNPicker(Arrays.asList(options1Array), Arrays.asList(options2Array));
     }
 
     //不联动情况下调用
@@ -203,17 +241,16 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
     }
 
     //不联动情况下调用
-    public void setNPicker(@NonNull T[] options1Items,
-                           @NonNull T[] options2Items,
-                           @NonNull T[] options3Items) {
-        setNPicker(Arrays.asList(options1Items), Arrays.asList(options2Items), Arrays.asList(options3Items));
+    public void setNPicker(@NonNull T[] options1Array,
+                           @NonNull T[] options2Array,
+                           @NonNull T[] options3Array) {
+        setNPicker(Arrays.asList(options1Array), Arrays.asList(options2Array), Arrays.asList(options3Array));
     }
 
     //不联动情况下调用
     public void setNPicker(List<T> options1Items,
                            List<T> options2Items,
                            List<T> options3Items) {
-
         wheelOptions.setLinkage(false);
         wheelOptions.setNPicker(options1Items, options2Items, options3Items);
         reSetCurrentItems();
@@ -223,21 +260,36 @@ public class OptionsPickerView<T> extends BasePickerView implements View.OnClick
     public void onClick(View v) {
         String tag = (String) v.getTag();
         if (tag.equals(TAG_SUBMIT)) {
-            returnData();
+            if (!returnData()) {
+                dismiss();
+            }
+        } else {
+            dismiss();
         }
-        dismiss();
     }
 
-    //抽离接口回调的方法
-    public void returnData() {
+    /**
+     * 抽离接口回调的方法
+     *
+     * @return true：拦截，不消失；false：不拦截，消失
+     */
+    public boolean returnData() {
         if (mPickerOptions.optionsSelectListener != null) {
             int[] optionsCurrentItems = wheelOptions.getCurrentItems();
-            mPickerOptions.optionsSelectListener.onOptionsSelect(optionsCurrentItems[0], optionsCurrentItems[1], optionsCurrentItems[2], clickView);
+            return mPickerOptions.optionsSelectListener.onOptionsSelect(clickView, optionsCurrentItems[0], optionsCurrentItems[1], optionsCurrentItems[2]);
         }
+        return false;
     }
 
     @Override
     public boolean isDialog() {
         return mPickerOptions.isDialog;
+    }
+
+    @Override
+    public void setTypeface(Typeface typeface) {
+        if (wheelOptions != null) {
+            wheelOptions.setTypeface(typeface);
+        }
     }
 }

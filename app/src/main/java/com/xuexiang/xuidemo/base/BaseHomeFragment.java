@@ -17,25 +17,25 @@
 package com.xuexiang.xuidemo.base;
 
 import android.content.res.Configuration;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xpage.model.PageInfo;
+import com.xuexiang.xui.adapter.recyclerview.RecyclerViewHolder;
+import com.xuexiang.xui.utils.DensityUtils;
+import com.xuexiang.xui.utils.WidgetUtils;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.activity.MainActivity;
-import com.xuexiang.xuidemo.adapter.base.BaseRecyclerAdapter;
 import com.xuexiang.xuidemo.adapter.WidgetItemAdapter;
-import com.xuexiang.xuidemo.base.decorator.GridDividerItemDecoration;
 import com.xuexiang.xuidemo.fragment.AboutFragment;
-import com.xuexiang.xutil.common.ClickUtils;
+import com.xuexiang.xuidemo.fragment.SearchComponentFragment;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import butterknife.BindView;
@@ -46,12 +46,10 @@ import butterknife.BindView;
  * @author xuexiang
  * @since 2018/12/29 上午11:18
  */
-public abstract class BaseHomeFragment extends BaseFragment implements BaseRecyclerAdapter.OnItemClickListener {
+public abstract class BaseHomeFragment extends BaseFragment implements RecyclerViewHolder.OnItemClickListener<PageInfo> {
 
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
-
-    private WidgetItemAdapter mWidgetItemAdapter;
 
     @Override
     protected TitleBar initTitle() {
@@ -62,6 +60,18 @@ public abstract class BaseHomeFragment extends BaseFragment implements BaseRecyc
             @SingleClick
             public void onClick(View v) {
                 getContainer().openMenu();
+            }
+        });
+        titleBar.addAction(new TitleBar.ImageAction(R.drawable.icon_action_query) {
+            @Override
+            @SingleClick
+            public void performAction(View view) {
+                openNewPage(SearchComponentFragment.class);
+            }
+
+            @Override
+            public int rightPadding() {
+                return DensityUtils.dp2px(10);
             }
         });
         titleBar.addAction(new TitleBar.ImageAction(R.drawable.icon_action_about) {
@@ -85,38 +95,32 @@ public abstract class BaseHomeFragment extends BaseFragment implements BaseRecyc
     }
 
     private void initRecyclerView() {
-        mWidgetItemAdapter = new WidgetItemAdapter(sortPageInfo(getPageContents()));
+        WidgetUtils.initGridRecyclerView(mRecyclerView, 3, DensityUtils.dp2px(2));
+
+        WidgetItemAdapter mWidgetItemAdapter = new WidgetItemAdapter(sortPageInfo(getPageContents()));
         mWidgetItemAdapter.setOnItemClickListener(this);
         mRecyclerView.setAdapter(mWidgetItemAdapter);
-        int spanCount = 3;
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), spanCount));
-        mRecyclerView.addItemDecoration(new GridDividerItemDecoration(getContext(), spanCount));
     }
 
     /**
-     * @return
+     * @return 页面内容
      */
     protected abstract List<PageInfo> getPageContents();
 
     /**
      * 进行排序
+     *
      * @param pageInfoList
      * @return
      */
     private List<PageInfo> sortPageInfo(List<PageInfo> pageInfoList) {
-        Collections.sort(pageInfoList, new Comparator<PageInfo>() {
-            @Override
-            public int compare(PageInfo o1, PageInfo o2) {
-                return o1.getClassPath().compareTo(o2.getClassPath());
-            }
-        });
+        Collections.sort(pageInfoList, (o1, o2) -> o1.getClassPath().compareTo(o2.getClassPath()));
         return pageInfoList;
     }
 
     @Override
     @SingleClick
-    public void onItemClick(View itemView, int pos) {
-        PageInfo widgetInfo = mWidgetItemAdapter.getItem(pos);
+    public void onItemClick(View itemView, PageInfo widgetInfo, int pos) {
         if (widgetInfo != null) {
             openNewPage(widgetInfo.getName());
         }
@@ -126,26 +130,15 @@ public abstract class BaseHomeFragment extends BaseFragment implements BaseRecyc
         return (MainActivity) getActivity();
     }
 
-    /**
-     * 菜单、返回键响应
-     */
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (getContainer().isMenuOpen()) {
-                getContainer().closeMenu();
-            } else {
-                ClickUtils.exitBy2Click();
-            }
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        //屏幕旋转时刷新一下title
+        super.onConfigurationChanged(newConfig);
+        ViewGroup root = (ViewGroup) getRootView();
+        if (root.getChildAt(0) instanceof TitleBar) {
+            root.removeViewAt(0);
+            initTitle();
         }
-        return true;
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig); //屏幕旋转时刷新一下title
-        ((ViewGroup) getRootView()).removeViewAt(0);
-        initTitle();
     }
 
 }

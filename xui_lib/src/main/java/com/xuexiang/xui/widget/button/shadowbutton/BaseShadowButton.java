@@ -6,7 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.support.v7.widget.AppCompatButton;
+import androidx.appcompat.widget.AppCompatButton;
 import android.util.AttributeSet;
 
 import com.xuexiang.xui.R;
@@ -28,6 +28,8 @@ public class BaseShadowButton extends AppCompatButton {
 	protected int mShapeType;
 	protected int mRadius;
 
+	protected RectF mRectF;
+
 	public BaseShadowButton(Context context) {
 		super(context);
 		init(context, null);
@@ -44,9 +46,6 @@ public class BaseShadowButton extends AppCompatButton {
 	}
 
 	protected void init(final Context context, final AttributeSet attrs) {
-		if (isInEditMode()) {
-			return;
-		}
 		final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ShadowButton);
 		mShapeType = typedArray.getInt(R.styleable.ShadowButton_sb_shape_type, SHAPE_TYPE_RECTANGLE);
 		mRadius = typedArray.getDimensionPixelSize(R.styleable.ShadowButton_sb_radius, getResources().getDimensionPixelSize(R.dimen.default_shadow_button_radius));
@@ -70,6 +69,7 @@ public class BaseShadowButton extends AppCompatButton {
 		super.onSizeChanged(w, h, oldw, oldh);
 		mWidth = w;
 		mHeight = h;
+		mRectF = new RectF(0, 0, mWidth, mHeight);
 	}
 
 	@Override
@@ -79,11 +79,9 @@ public class BaseShadowButton extends AppCompatButton {
 			return;
 		}
 		if (mShapeType == SHAPE_TYPE_ROUND) {
-			canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2, mBackgroundPaint);
+			canvas.drawCircle(mWidth / 2F, mHeight / 2F, mWidth / 2F, mBackgroundPaint);
 		} else {
-			RectF rectF = new RectF();
-			rectF.set(0, 0, mWidth, mHeight);
-			canvas.drawRoundRect(rectF, mRadius, mRadius, mBackgroundPaint);
+			canvas.drawRoundRect(mRectF, mRadius, mRadius, mBackgroundPaint);
 		}
 		super.onDraw(canvas);
 	}

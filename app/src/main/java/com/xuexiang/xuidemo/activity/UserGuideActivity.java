@@ -2,7 +2,6 @@ package com.xuexiang.xuidemo.activity;
 
 import android.app.Activity;
 
-import com.xuexiang.xui.utils.KeyboardUtils;
 import com.xuexiang.xui.widget.activity.BaseGuideActivity;
 import com.xuexiang.xuidemo.DemoDataProvider;
 
@@ -16,13 +15,13 @@ import java.util.List;
  */
 public class UserGuideActivity extends BaseGuideActivity {
     @Override
-    protected List<Integer> getGuidesResIdList() {
-        return DemoDataProvider.getUsertGuides();
+    protected List<Object> getGuideResourceList() {
+        return DemoDataProvider.getUserGuides();
     }
 
     @Override
     protected Class<? extends Activity> getSkipClass() {
-        return MainActivity.class;
+        return LoginActivity.class;
     }
 
 }

@@ -4,20 +4,20 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.CheckResult;
-import android.support.annotation.ColorInt;
-import android.support.annotation.ColorRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
 import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.CheckResult;
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 
 import com.xuexiang.xui.R;
 
@@ -295,21 +295,22 @@ public class XToast {
                                @ColorInt int tintColor, @ColorInt int textColor, int duration,
                                boolean withIcon, boolean shouldTint) {
         final Toast currentToast = Toast.makeText(context, "", duration);
-        final View toastLayout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE))
-                .inflate(R.layout.xtoast_layout, null);
+        final View toastLayout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.xui_layout_xtoast, null);
         final ImageView toastIcon = toastLayout.findViewById(R.id.toast_icon);
         final TextView toastTextView = toastLayout.findViewById(R.id.toast_text);
         Drawable drawableFrame;
 
-        if (shouldTint)
+        if (shouldTint) {
             drawableFrame = Utils.tint9PatchDrawableFrame(context, tintColor);
-        else
+        } else {
             drawableFrame = Utils.getDrawable(context, R.drawable.xtoast_frame);
+        }
         Utils.setBackground(toastLayout, drawableFrame);
 
         if (withIcon) {
-            if (icon == null)
+            if (icon == null) {
                 throw new IllegalArgumentException("Avoid passing 'icon' as null if 'withIcon' is set to true");
+            }
             Utils.setBackground(toastIcon, Config.get().tintIcon ? Utils.tintIcon(icon, textColor) : icon);
         } else {
             toastIcon.setVisibility(View.GONE);
@@ -317,7 +318,7 @@ public class XToast {
 
         toastTextView.setText(message);
         toastTextView.setTextColor(textColor);
-        toastTextView.setTypeface(Config.get().typeface);
+        toastTextView.setTypeface(Config.get().typeface, Typeface.NORMAL);
         if (Config.get().textSize != -1) {
             toastTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, Config.get().textSize);
         }
@@ -327,8 +328,9 @@ public class XToast {
         currentToast.setView(toastLayout);
 
         if (!Config.get().allowQueue) {
-            if (lastToast != null)
+            if (lastToast != null) {
                 lastToast.cancel();
+            }
             lastToast = currentToast;
         }
         if (Config.get().gravity != -1) {
@@ -382,8 +384,10 @@ public class XToast {
         }
 
         @CheckResult
-        public Config setToastTypeface(@NonNull Typeface typeface) {
-            this.typeface = typeface;
+        public Config setToastTypeface(Typeface typeface) {
+            if (typeface != null) {
+                this.typeface = typeface;
+            }
             return this;
         }
 
@@ -419,6 +423,13 @@ public class XToast {
             this.gravity = gravity;
             this.xOffset = xOffset;
             this.yOffset = yOffset;
+            return this;
+        }
+
+        public Config resetGravity() {
+            gravity = -1;
+            xOffset = 0;
+            yOffset = 0;
             return this;
         }
 

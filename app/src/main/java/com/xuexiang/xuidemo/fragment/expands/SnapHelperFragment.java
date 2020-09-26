@@ -17,12 +17,13 @@
 package com.xuexiang.xuidemo.fragment.expands;
 
 
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.PagerSnapHelper;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SnapHelper;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.PagerSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
 
 import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
@@ -86,20 +87,17 @@ public class SnapHelperFragment extends BaseFragment {
         new BottomSheet.BottomListSheetBuilder(getActivity())
                 .addItem("水平方向")
                 .addItem("垂直方向")
-                .setOnSheetItemClickListener(new BottomSheet.BottomListSheetBuilder.OnSheetItemClickListener() {
-                    @Override
-                    public void onClick(BottomSheet dialog, View itemView, int position, String tag) {
-                        dialog.dismiss();
-                        switch (position) {
-                            case 0:
-                                mPagerLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-                                break;
-                            case 1:
-                                mPagerLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-                                break;
-                            default:
-                                break;
-                        }
+                .setOnSheetItemClickListener((dialog, itemView, position, tag) -> {
+                    dialog.dismiss();
+                    switch (position) {
+                        case 0:
+                            mPagerLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+                            break;
+                        case 1:
+                            mPagerLayoutManager.setOrientation(RecyclerView.VERTICAL);
+                            break;
+                        default:
+                            break;
                     }
                 })
                 .build()

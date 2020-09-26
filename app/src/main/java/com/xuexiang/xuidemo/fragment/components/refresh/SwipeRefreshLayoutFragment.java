@@ -1,15 +1,16 @@
 package com.xuexiang.xuidemo.fragment.components.refresh;
 
 import android.os.Handler;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.utils.WidgetUtils;
 import com.xuexiang.xuidemo.DemoDataProvider;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.SimpleRecyclerAdapter;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xuidemo.utils.Utils;
 
 import butterknife.BindView;
 
@@ -41,7 +42,7 @@ public class SwipeRefreshLayoutFragment extends BaseFragment {
      */
     @Override
     protected void initViews() {
-        Utils.initRecyclerView(recyclerView);
+        WidgetUtils.initRecyclerView(recyclerView);
 
         recyclerView.setAdapter(mAdapter = new SimpleRecyclerAdapter());
 
@@ -51,12 +52,7 @@ public class SwipeRefreshLayoutFragment extends BaseFragment {
     @Override
     protected void initListeners() {
         //下拉刷新
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                loadData();
-            }
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::loadData);
         refresh(); //第一次进入触发自动刷新，演示效果
     }
 
@@ -66,13 +62,10 @@ public class SwipeRefreshLayoutFragment extends BaseFragment {
     }
 
     private void loadData() {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mAdapter.refresh(DemoDataProvider.getDemoData());
-                if (swipeRefreshLayout != null) {
-                    swipeRefreshLayout.setRefreshing(false);
-                }
+        new Handler().postDelayed(() -> {
+            mAdapter.refresh(DemoDataProvider.getDemoData());
+            if (swipeRefreshLayout != null) {
+                swipeRefreshLayout.setRefreshing(false);
             }
         }, 1000);
     }

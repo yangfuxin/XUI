@@ -44,12 +44,14 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.utils.ResUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -63,7 +65,6 @@ import java.util.List;
 public class MaterialSearchView extends FrameLayout implements Filter.FilterListener {
     public static final int REQUEST_VOICE = 9999;
 
-    private MenuItem mMenuItem;
     private boolean mIsSearchOpen = false;
     private int mAnimationDuration;
     private boolean mClearingFocus;
@@ -76,7 +77,7 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
     private ImageButton mBackBtn;
     private ImageButton mVoiceBtn;
     private ImageButton mClearBtn;
-    private RelativeLayout mSearchTopBar;
+    private LinearLayout mSearchTopBar;
 
     private CharSequence mOldQueryText;
     private CharSequence mUserQuery;
@@ -119,7 +120,7 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
 
         if (a != null) {
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchBackground)) {
-                setBackground(a.getDrawable(R.styleable.MaterialSearchView_msv_searchBackground));
+                setBackground(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchBackground));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_android_textColor)) {
@@ -135,23 +136,23 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchVoiceIcon)) {
-                setVoiceIcon(a.getDrawable(R.styleable.MaterialSearchView_msv_searchVoiceIcon));
+                setVoiceIcon(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchVoiceIcon));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchClearIcon)) {
-                setCloseIcon(a.getDrawable(R.styleable.MaterialSearchView_msv_searchClearIcon));
+                setCloseIcon(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchClearIcon));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchBackIcon)) {
-                setBackIcon(a.getDrawable(R.styleable.MaterialSearchView_msv_searchBackIcon));
+                setBackIcon(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchBackIcon));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchSuggestionBackground)) {
-                setSuggestionBackground(a.getDrawable(R.styleable.MaterialSearchView_msv_searchSuggestionBackground));
+                setSuggestionBackground(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchSuggestionBackground));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_msv_searchSuggestionIcon)) {
-                setSuggestionIcon(a.getDrawable(R.styleable.MaterialSearchView_msv_searchSuggestionIcon));
+                setSuggestionIcon(ResUtils.getDrawableAttrRes(getContext(), a, R.styleable.MaterialSearchView_msv_searchSuggestionIcon));
             }
 
             if (a.hasValue(R.styleable.MaterialSearchView_android_inputType)) {
@@ -237,7 +238,7 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
     }
 
     private final OnClickListener mOnClickListener = new OnClickListener() {
-
+        @Override
         public void onClick(View v) {
             if (v == mBackBtn) {
                 closeSearch();
@@ -254,12 +255,16 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
     };
 
     private void onVoiceClicked() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak an item name or number");    // user hint
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);    // setting recognition model, optimized for short phrases – search queries
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);    // quantity of results we want to receive
-        if (mContext instanceof Activity) {
-            ((Activity) mContext).startActivityForResult(intent, REQUEST_VOICE);
+        try {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            //intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak an item name or number");    // user hint
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);    // setting recognition model, optimized for short phrases – search queries
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);    // quantity of results we want to receive
+            if (mContext instanceof Activity) {
+                ((Activity) mContext).startActivityForResult(intent, REQUEST_VOICE);
+            }
+        } catch (Exception e) {
+            Toast.makeText(getContext(), R.string.xui_tip_no_recognize_speech, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -384,6 +389,7 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
 
     /**
      * 设置是否允许语音搜索
+     *
      * @param voiceSearch
      */
     public void setVoiceSearch(boolean voiceSearch) {
@@ -430,6 +436,18 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
         mAdapter = adapter;
         mSuggestionsListView.setAdapter(adapter);
         startFilter(mSearchSrcTextView.getText());
+    }
+
+
+    /**
+     * 设置搜索过滤器
+     *
+     * @param searchFilter
+     */
+    public void setSearchFilter(AbstractSearchFilter searchFilter) {
+        if (mAdapter != null && mAdapter instanceof SearchAdapter) {
+            ((SearchAdapter) mAdapter).setSearchFilter(searchFilter);
+        }
     }
 
     /**
@@ -502,8 +520,7 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
      * @param menuItem
      */
     public void setMenuItem(MenuItem menuItem) {
-        this.mMenuItem = menuItem;
-        mMenuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+        menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 showSearch();
@@ -656,9 +673,13 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
     @Override
     public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
         // Don't accept focus if in the middle of clearing focus
-        if (mClearingFocus) return false;
+        if (mClearingFocus) {
+            return false;
+        }
         // Check if SearchView is focusable.
-        if (!isFocusable()) return false;
+        if (!isFocusable()) {
+            return false;
+        }
         return mSearchSrcTextView.requestFocus(direction, previouslyFocusedRect);
     }
 
@@ -723,10 +744,12 @@ public class MaterialSearchView extends FrameLayout implements Filter.FilterList
         //required field that makes Parcelables from a Parcel
         public static final Creator<SavedState> CREATOR =
                 new Creator<SavedState>() {
+                    @Override
                     public SavedState createFromParcel(Parcel in) {
                         return new SavedState(in);
                     }
 
+                    @Override
                     public SavedState[] newArray(int size) {
                         return new SavedState[size];
                     }

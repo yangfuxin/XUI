@@ -18,9 +18,7 @@ package com.xuexiang.xui.widget.imageview.preview.enitity;
 
 import android.graphics.Rect;
 import android.os.Parcelable;
-import android.support.annotation.Nullable;
-
-import java.io.Serializable;
+import androidx.annotation.Nullable;
 
 /**
  * 图片预览接口
@@ -39,12 +37,10 @@ public interface IPreviewInfo extends Parcelable {
      */
     Rect getBounds();
 
-
     /**
      * @return 获取视频链接
      */
     @Nullable
     String getVideoUrl();
-
 
 }

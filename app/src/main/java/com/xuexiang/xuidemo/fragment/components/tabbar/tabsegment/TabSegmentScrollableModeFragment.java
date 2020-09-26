@@ -16,14 +16,15 @@
 
 package com.xuexiang.xuidemo.fragment.components.tabbar.tabsegment;
 
-import android.support.annotation.NonNull;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xpage.annotation.Page;
@@ -32,7 +33,7 @@ import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xui.widget.tabbar.TabSegment;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +47,8 @@ import butterknife.BindView;
 @Page(name = "内容自适应，超过父容器则滚动")
 public class TabSegmentScrollableModeFragment extends BaseFragment {
 
+    @BindView(R.id.tabSegment1)
+    TabSegment mTabSegment1;
     @BindView(R.id.tabSegment)
     TabSegment mTabSegment;
     @BindView(R.id.contentViewPager)
@@ -58,7 +61,7 @@ public class TabSegmentScrollableModeFragment extends BaseFragment {
     private Map<MultiPage, View> mPageMap = new HashMap<>();
     private PagerAdapter mPagerAdapter = new PagerAdapter() {
         @Override
-        public boolean isViewFromObject(View view, Object object) {
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
             return view == object;
         }
 
@@ -78,7 +81,7 @@ public class TabSegmentScrollableModeFragment extends BaseFragment {
         }
 
         @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
+        public void destroyItem(ViewGroup container, int position, @NonNull Object object) {
             container.removeView((View) object);
         }
 
@@ -130,6 +133,8 @@ public class TabSegmentScrollableModeFragment extends BaseFragment {
 
     @Override
     protected void initViews() {
+        mTabSegment1.setVisibility(View.GONE);
+
         mContentViewPager.setAdapter(mPagerAdapter);
         mContentViewPager.setCurrentItem(mDestPage.getPosition(), false);
         for (int i = 0; i < mCurrentItemCount; i++) {
@@ -144,22 +149,22 @@ public class TabSegmentScrollableModeFragment extends BaseFragment {
         mTabSegment.addOnTabSelectedListener(new TabSegment.OnTabSelectedListener() {
             @Override
             public void onTabSelected(int index) {
-                ToastUtils.toast("select " + pages[index]);
+                XToastUtils.toast("select " + pages[index]);
             }
 
             @Override
             public void onTabUnselected(int index) {
-                ToastUtils.toast("unSelect " + pages[index]);
+                XToastUtils.toast("unSelect " + pages[index]);
             }
 
             @Override
             public void onTabReselected(int index) {
-                ToastUtils.toast("reSelect " + pages[index]);
+                XToastUtils.toast("reSelect " + pages[index]);
             }
 
             @Override
             public void onDoubleTap(int index) {
-                ToastUtils.toast("double tap " + pages[index]);
+                XToastUtils.toast("double tap " + pages[index]);
             }
         });
     }

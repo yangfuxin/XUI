@@ -16,25 +16,23 @@
 
 package com.xuexiang.xuidemo.base.webview;
 
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 
+import androidx.annotation.RequiresApi;
+
 import com.just.agentweb.core.client.MiddlewareWebClientBase;
 import com.xuexiang.xui.utils.ResUtils;
-import com.xuexiang.xui.widget.dialog.DialogLoader;
 import com.xuexiang.xuidemo.R;
-import com.xuexiang.xutil.XUtil;
-import com.xuexiang.xutil.tip.ToastUtils;
 
-import java.net.URISyntaxException;
+import static com.xuexiang.xuidemo.base.webview.WebViewInterceptDialog.APP_LINK_HOST;
 
 /**
+ * 【网络请求、加载】
  * WebClient（WebViewClient 这个类主要帮助WebView处理各种通知、url加载，请求时间的）中间件
  * <p>
  * <p>
@@ -56,7 +54,7 @@ import java.net.URISyntaxException;
  * <p>
  * <p>
  * 中断中间件的执行， 删除super.methodName(...) 这行即可
- *
+ * <p>
  * 这里主要是做去广告的工作
  */
 public class MiddlewareWebViewClient extends MiddlewareWebClientBase {
@@ -90,9 +88,11 @@ public class MiddlewareWebViewClient extends MiddlewareWebClientBase {
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         url = url.toLowerCase();
         if (!hasAd(url)) {
-            return super.shouldInterceptRequest(view, url);//正常加载
+            //正常加载
+            return super.shouldInterceptRequest(view, url);
         } else {
-            return new WebResourceResponse(null, null, null);//含有广告资源屏蔽请求
+            //含有广告资源屏蔽请求
+            return new WebResourceResponse(null, null, null);
         }
     }
 
@@ -101,9 +101,11 @@ public class MiddlewareWebViewClient extends MiddlewareWebClientBase {
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         String url = request.getUrl().toString().toLowerCase();
         if (!hasAd(url)) {
-            return super.shouldInterceptRequest(view, request);//正常加载
+            //正常加载
+            return super.shouldInterceptRequest(view, request);
         } else {
-            return new WebResourceResponse(null, null, null);//含有广告资源屏蔽请求
+            //含有广告资源屏蔽请求
+            return new WebResourceResponse(null, null, null);
         }
     }
 
@@ -123,66 +125,22 @@ public class MiddlewareWebViewClient extends MiddlewareWebClientBase {
         return false;
     }
 
-
     /**
      * 根据url的scheme处理跳转第三方app的业务
      */
     private boolean shouldOverrideUrlLoadingByApp(WebView webView, final String url) {
         if (url.startsWith("http") || url.startsWith("https") || url.startsWith("ftp")) {
-            //不处理http, https, ftp的请求
-            return false;
+            //不处理http, https, ftp的请求,除了host = xuexiangjys.club的情况，主要是用于处理AppLink
+            Uri uri = Uri.parse(url);
+            if (uri != null && !(APP_LINK_HOST.equals(uri.getHost())
+                    //防止xui官网被拦截
+                    && url.contains("xpage"))) {
+                return false;
+            }
         }
 
-        DialogLoader.getInstance().showConfirmDialog(
-                webView.getContext(),
-                getOpenTitle(url),
-                ResUtils.getString(R.string.lab_yes),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        openApp(url);
-                    }
-                },
-                ResUtils.getString(R.string.lab_no),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                }
-        );
+        WebViewInterceptDialog.show(url);
         return true;
-    }
-
-    private String getOpenTitle(String url) {
-        String scheme = getScheme(url);
-        if ("mqqopensdkapi".equals(scheme)) {
-            return "是否允许页面打开\"QQ\"?";
-        } else {
-            return ResUtils.getString(R.string.lab_open_third_app);
-        }
-    }
-
-    private String getScheme(String url) {
-        try {
-            Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-            return intent.getScheme();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return "";
-    }
-
-    private void openApp(String url) {
-        Intent intent;
-        try {
-            intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            XUtil.getContext().startActivity(intent);
-        } catch (Exception e) {
-            ToastUtils.toast("您所打开的第三方App未安装！");
-        }
     }
 
 }

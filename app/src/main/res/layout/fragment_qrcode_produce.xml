@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (C) 2018 xuexiangjys(xuexiangjys@163.com)
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +20,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -34,9 +33,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-               android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
 
                 <EditText
@@ -48,9 +47,9 @@
                     android:hint="请输入二维码的内容"
                     android:inputType="text" />
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_save"
-                    style="@style/Button.Blue.wrap"
+                    style="@style/Button.Primary.wrap"
                     android:layout_marginStart="10dp"
                     android:text="保存" />
 
@@ -60,15 +59,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:layout_marginEnd="10dp"
                 android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
 
                 <TextView
                     style="@style/TextStyle.Content"
                     android:text="复杂二维码生成" />
 
-                <android.support.v7.widget.SwitchCompat
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/sc_change"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -83,20 +82,20 @@
                 android:id="@+id/ll_normal_create"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_create_no_logo"
-                    style="@style/Button.Blue.wrap"
+                    style="@style/Button.Primary.wrap"
                     android:layout_weight="1"
                     android:text="生成无图标的二维码" />
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_create_with_logo"
-                    style="@style/Button.Blue.wrap"
+                    style="@style/Button.Primary.wrap"
                     android:layout_marginStart="30dp"
                     android:layout_weight="1"
                     android:text="生成带图标的二维码" />
@@ -106,17 +105,17 @@
             <include layout="@layout/include_complex_qrcode_produce" />
 
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/iv_qrcode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="10dp"
-                android:minHeight="200dp"
                 android:minWidth="200dp"
+                android:minHeight="200dp"
                 android:scaleType="fitXY" />
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>
 

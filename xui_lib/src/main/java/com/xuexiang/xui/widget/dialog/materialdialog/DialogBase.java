@@ -20,7 +20,7 @@ package com.xuexiang.xui.widget.dialog.materialdialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -88,7 +88,7 @@ class DialogBase extends Dialog implements DialogInterface.OnShowListener {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev) {
+    public boolean onTouchEvent(@NonNull MotionEvent ev) {
         KeyboardUtils.dispatchTouchEvent(ev, this);
         return super.onTouchEvent(ev);
     }

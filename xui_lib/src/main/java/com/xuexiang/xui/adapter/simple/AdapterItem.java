@@ -3,10 +3,12 @@ package com.xuexiang.xui.adapter.simple;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
+
 import com.xuexiang.xui.utils.ResUtils;
 
 /**
- *
+ * 简易的适配项
  *
  * @author xuexiang
  * @since 2019/1/14 下午10:13
@@ -22,27 +24,37 @@ public class AdapterItem {
      */
     private Drawable mIcon;
 
-    public AdapterItem(CharSequence title){
+    public static AdapterItem of(CharSequence title) {
+        return new AdapterItem(title);
+    }
+
+    public static AdapterItem[] arrayof(CharSequence[] title) {
+        AdapterItem[] array = new AdapterItem[title.length];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = new AdapterItem(title[i]);
+        }
+        return array;
+    }
+
+    public AdapterItem(CharSequence title) {
         mTitle = title;
     }
 
-    public AdapterItem(CharSequence title, Drawable icon){
+    public AdapterItem(CharSequence title, Drawable icon) {
         mTitle = title;
         mIcon = icon;
     }
 
-    public AdapterItem(CharSequence title, int drawableId){
-       this(title, ResUtils.getDrawable(drawableId));
+    public AdapterItem(CharSequence title, int drawableId) {
+        this(title, ResUtils.getDrawable(drawableId));
     }
 
-    public AdapterItem(Context context, int titleId, int drawableId){
-        mTitle = context.getResources().getText(titleId);
-        mIcon = context.getResources().getDrawable(drawableId);
+    public AdapterItem(Context context, int titleId, int drawableId) {
+        this(ResUtils.getString(titleId), ResUtils.getDrawable(context, drawableId));
     }
 
     public AdapterItem(Context context, CharSequence title, int drawableId) {
-        mTitle = title;
-        mIcon = context.getResources().getDrawable(drawableId);
+        this(title, ResUtils.getDrawable(context, drawableId));
     }
 
     public CharSequence getTitle() {
@@ -61,5 +73,11 @@ public class AdapterItem {
     public AdapterItem setIcon(Drawable icon) {
         mIcon = icon;
         return this;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return mTitle.toString();
     }
 }

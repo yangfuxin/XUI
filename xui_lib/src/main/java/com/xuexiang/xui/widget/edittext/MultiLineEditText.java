@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.ResUtils;
+import com.xuexiang.xui.utils.ThemeUtils;
 
 import static com.xuexiang.xui.utils.DensityUtils.dp2px;
 import static com.xuexiang.xui.utils.DensityUtils.sp2px;
@@ -67,6 +68,10 @@ public class MultiLineEditText extends LinearLayout {
      */
     private float mContentViewHeight;
     /**
+     * 输入框高度是否是固定高度，默认是true
+     */
+    private boolean mIsFixHeight;
+    /**
      * 输入框padding
      */
     private int mContentPadding;
@@ -84,12 +89,12 @@ public class MultiLineEditText extends LinearLayout {
     }
 
     public MultiLineEditText(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        this(context, attrs, R.attr.MultiLineEditTextStyle);
     }
 
     public MultiLineEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initAttrs(context, attrs);
+        initAttrs(context, attrs, defStyleAttr);
         init();
     }
 
@@ -99,18 +104,19 @@ public class MultiLineEditText extends LinearLayout {
      * @param context
      * @param attrs
      */
-    private void initAttrs(Context context, AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MultiLineEditText);
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MultiLineEditText, defStyleAttr, 0);
         mMaxCount = typedArray.getInteger(R.styleable.MultiLineEditText_mlet_maxCount, 240);
         mIgnoreCnOrEn = typedArray.getBoolean(R.styleable.MultiLineEditText_mlet_ignoreCnOrEn, true);
         mHintText = typedArray.getString(R.styleable.MultiLineEditText_mlet_hintText);
-        mHintTextColor = typedArray.getColor(R.styleable.MultiLineEditText_mlet_hintTextColor, ResUtils.getColor(R.color.xui_config_color_edittext_hint_text));
+        mHintTextColor = typedArray.getColor(R.styleable.MultiLineEditText_mlet_hintTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_config_color_hint_text));
         mContentPadding = typedArray.getDimensionPixelSize(R.styleable.MultiLineEditText_mlet_contentPadding, dp2px(context, 10));
-        mContentBackground = typedArray.getDrawable(R.styleable.MultiLineEditText_mlet_contentBackground);
+        mContentBackground = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.MultiLineEditText_mlet_contentBackground);
         mContentText = typedArray.getString(R.styleable.MultiLineEditText_mlet_contentText);
-        mContentTextColor = typedArray.getColor(R.styleable.MultiLineEditText_mlet_contentTextColor, ResUtils.getColor(R.color.xui_config_color_edittext_input_text));
+        mContentTextColor = typedArray.getColor(R.styleable.MultiLineEditText_mlet_contentTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_config_color_input_text));
         mContentTextSize = typedArray.getDimensionPixelSize(R.styleable.MultiLineEditText_mlet_contentTextSize, sp2px(context, 14));
         mContentViewHeight = typedArray.getDimensionPixelSize(R.styleable.MultiLineEditText_mlet_contentViewHeight, dp2px(context, 140));
+        mIsFixHeight = typedArray.getBoolean(R.styleable.MultiLineEditText_mlet_isFixHeight, true);
         mIsShowSurplusNumber = typedArray.getBoolean(R.styleable.MultiLineEditText_mlet_showSurplusNumber, false);
         typedArray.recycle();
     }
@@ -128,13 +134,17 @@ public class MultiLineEditText extends LinearLayout {
         mEtInput.setHint(mHintText);
         mEtInput.setHintTextColor(mHintTextColor);
         mEtInput.setText(mContentText);
-        mEtInput.setPadding(mContentPadding, mContentPadding, mContentPadding, mContentPadding);
+        mEtInput.setPadding(mContentPadding, mContentPadding, mContentPadding, 0);
         if (mContentBackground != null) {
             mEtInput.setBackground(mContentBackground);
         }
         mEtInput.setTextColor(mContentTextColor);
         mEtInput.setTextSize(TypedValue.COMPLEX_UNIT_PX, mContentTextSize);
-        mEtInput.setHeight((int) mContentViewHeight);
+        if (mIsFixHeight) {
+            mEtInput.setHeight((int) mContentViewHeight);
+        } else {
+            mEtInput.setMinHeight((int) mContentViewHeight);
+        }
         /**
          * 配合 mTvInputNumber xml的 android:focusable="true"
          android:focusableInTouchMode="true"
@@ -157,8 +167,6 @@ public class MultiLineEditText extends LinearLayout {
     }
 
     private TextWatcher mTextWatcher = new TextWatcher() {
-        private int mEditStart;
-        private int mEditEnd;
 
         @Override
         public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -173,8 +181,8 @@ public class MultiLineEditText extends LinearLayout {
         @Override
         public void afterTextChanged(Editable editable) {
 
-            mEditStart = mEtInput.getSelectionStart();
-            mEditEnd = mEtInput.getSelectionEnd();
+            int mEditStart = mEtInput.getSelectionStart();
+            int mEditEnd = mEtInput.getSelectionEnd();
 
             // 先去掉监听器，否则会出现栈溢出
             mEtInput.removeTextChangedListener(mTextWatcher);
@@ -209,7 +217,7 @@ public class MultiLineEditText extends LinearLayout {
     private long calculateLength(CharSequence c) {
         double len = 0;
         for (int i = 0; i < c.length(); i++) {
-            int tmp = (int) c.charAt(i);
+            int tmp = c.charAt(i);
             if (tmp > 0 && tmp < 127) {
                 len += 0.5;
             } else {
@@ -220,11 +228,7 @@ public class MultiLineEditText extends LinearLayout {
     }
 
     private int calculateLengthIgnoreCnOrEn(CharSequence c) {
-        int len = 0;
-        for (int i = 0; i < c.length(); i++) {
-            len++;
-        }
-        return len;
+        return c != null ? c.length() : 0;
     }
 
     private void configCount() {
@@ -239,12 +243,11 @@ public class MultiLineEditText extends LinearLayout {
 
     private void updateCount(int nowCount) {
         if (mIsShowSurplusNumber) {
-            mTvInputNumber.setText(String.valueOf((mMaxCount - nowCount)) + "/" + mMaxCount);
+            mTvInputNumber.setText((mMaxCount - nowCount) + "/" + mMaxCount);
         } else {
-            mTvInputNumber.setText(String.valueOf(nowCount) + "/" + mMaxCount);
+            mTvInputNumber.setText(nowCount + "/" + mMaxCount);
         }
     }
-
 
     public EditText getEditText() {
         return mEtInput;
@@ -254,12 +257,42 @@ public class MultiLineEditText extends LinearLayout {
         return mTvInputNumber;
     }
 
+    /**
+     * 设置填充内容
+     *
+     * @param content
+     */
     public void setContentText(String content) {
+        if (content != null && calculateContentLength(content) > mMaxCount) {
+            content = content.substring(0, getSubStringIndex(content));
+        }
         mContentText = content;
         if (mEtInput == null) {
             return;
         }
         mEtInput.setText(mContentText);
+    }
+
+    private long calculateContentLength(String content) {
+        return mIgnoreCnOrEn ? calculateLengthIgnoreCnOrEn(content) : calculateLength(content);
+    }
+
+    private int getSubStringIndex(String content) {
+        if (!mIgnoreCnOrEn) {
+            double len = 0;
+            for (int i = 0; i < content.length(); i++) {
+                int tmp = content.charAt(i);
+                if (tmp > 0 && tmp < 127) {
+                    len += 0.5;
+                } else {
+                    len++;
+                }
+                if (Math.round(len) == mMaxCount) {
+                    return i + 1;
+                }
+            }
+        }
+        return mMaxCount;
     }
 
     /**

@@ -6,9 +6,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.widget.AppCompatTextView;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+
+import androidx.appcompat.widget.AppCompatTextView;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.widget.textview.marqueen.DisplayEntity;
@@ -77,26 +78,22 @@ public class MarqueeTextView extends AppCompatTextView {
 
     private OnMarqueeListener mOnMarqueeListener;
 
+    private final Object mLock = new Object();
+
     public MarqueeTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(attrs);
     }
 
     private void init(AttributeSet attrs) {
-        if (isInEditMode()) {
-            return;
-        }
-
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.MarqueeTextView);
-        if (typedArray != null) {
-            mIsAutoFit = typedArray.getBoolean(R.styleable.MarqueeTextView_mtv_isAutoFit, false);
-            mIsAutoDisplay = typedArray.getBoolean(R.styleable.MarqueeTextView_mtv_isAutoDisplay, false);
+        mIsAutoFit = typedArray.getBoolean(R.styleable.MarqueeTextView_mtv_isAutoFit, false);
+        mIsAutoDisplay = typedArray.getBoolean(R.styleable.MarqueeTextView_mtv_isAutoDisplay, false);
 
-            if (mIsAutoDisplay) {
-                setVisibility(GONE);
-            }
-            typedArray.recycle();
+        if (mIsAutoDisplay) {
+            setVisibility(GONE);
         }
+        typedArray.recycle();
     }
 
     @Override
@@ -247,7 +244,8 @@ public class MarqueeTextView extends AppCompatTextView {
     public boolean removeDisplayEntity(DisplayEntity displayEntity) {
         if (displayEntity != null && displayEntity.isValid()) {
             if (isRollingDisplayEntity(displayEntity)) {
-                if (mCurrentIndex <= mDisplayList.size() - 1) {  //防止remove出错
+                //防止remove出错
+                if (mCurrentIndex <= mDisplayList.size() - 1) {
                     mDisplayList.remove(mCurrentIndex);
                     rollDisplayByIndex(mCurrentIndex);
                     return true;
@@ -286,7 +284,7 @@ public class MarqueeTextView extends AppCompatTextView {
     private boolean removeByDisplayEntity(DisplayEntity displayEntity) {
         if (getDisplaySize() > 0) {
             Iterator<DisplayEntity> it = mDisplayList.iterator();
-            synchronized (it) {
+            synchronized (mLock) {
                 while (it.hasNext()) {
                     DisplayEntity matchEntity = it.next();
                     if (TextUtils.isEmpty(displayEntity.getID())) {
@@ -315,11 +313,13 @@ public class MarqueeTextView extends AppCompatTextView {
         if (displayEntity != null) {
             if (mOnMarqueeListener != null) {
                 DisplayEntity temp = mOnMarqueeListener.onStartMarquee(displayEntity, mCurrentIndex);
-                if (temp != null && temp.isValid()) {  //返回的消息有效
+                //返回的消息有效
+                if (temp != null && temp.isValid()) {
                     displayEntity = temp;
                     mDisplayList.set(mCurrentIndex, displayEntity);
                 } else {   //返回的消息无效， 去除该条消息，继续滚动下一条
-                    if (mCurrentIndex <= mDisplayList.size() - 1) {  //防止remove出错
+                    //防止remove出错
+                    if (mCurrentIndex <= mDisplayList.size() - 1) {
                         mDisplayList.remove(mCurrentIndex);
                     }
                     rollDisplayByIndex(mCurrentIndex);

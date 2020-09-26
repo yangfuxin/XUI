@@ -5,7 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.support.v7.widget.AppCompatImageView;
+import androidx.appcompat.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -28,6 +28,8 @@ public class ShadowImageView extends AppCompatImageView {
     private int mShapeType;
     private int mRadius;
 
+    private RectF mRectF;
+
     public ShadowImageView(Context context) {
         super(context);
         init(context, null);
@@ -44,9 +46,6 @@ public class ShadowImageView extends AppCompatImageView {
     }
 
     private void init(final Context context, final AttributeSet attrs) {
-        if (isInEditMode()) {
-            return;
-        }
         final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ShadowButton);
         mPressedColor = typedArray.getColor(R.styleable.ShadowButton_sb_color_pressed, getResources().getColor(R.color.default_shadow_button_color_pressed));
         mPaintAlpha = typedArray.getInteger(R.styleable.ShadowButton_sb_alpha_pressed, mPaintAlpha);
@@ -68,6 +67,7 @@ public class ShadowImageView extends AppCompatImageView {
         super.onSizeChanged(w, h, oldw, oldh);
         mWidth = w;
         mHeight = h;
+        mRectF = new RectF(0, 0, mWidth, mHeight);
     }
 
     @Override
@@ -77,11 +77,9 @@ public class ShadowImageView extends AppCompatImageView {
             return;
         }
         if (mShapeType == 0) {
-            canvas.drawCircle(mWidth / 2, mHeight / 2, mWidth / 2.1038f, mPaint);
+            canvas.drawCircle(mWidth / 2F, mHeight / 2F, mWidth / 2.1038f, mPaint);
         } else {
-            RectF rectF = new RectF();
-            rectF.set(0, 0, mWidth, mHeight);
-            canvas.drawRoundRect(rectF, mRadius, mRadius, mPaint);
+            canvas.drawRoundRect(mRectF, mRadius, mRadius, mPaint);
         }
     }
 

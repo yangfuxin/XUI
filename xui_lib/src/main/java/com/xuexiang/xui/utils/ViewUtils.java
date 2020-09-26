@@ -21,9 +21,11 @@ import android.animation.AnimatorSet;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -31,12 +33,10 @@ import android.graphics.LightingColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,8 +47,22 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.TranslateAnimation;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+
+import com.xuexiang.xui.R;
+import com.xuexiang.xui.XUI;
+import com.xuexiang.xui.widget.imageview.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,11 +81,11 @@ public final class ViewUtils {
     }
 
     // copy from View.generateViewId for API <= 16
-    private static final AtomicInteger sNextGeneratedId = new AtomicInteger(1);
+    private static final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(1);
 
 
     private static final int[] APPCOMPAT_CHECK_ATTRS = {
-            android.support.v7.appcompat.R.attr.colorPrimary
+            R.attr.colorPrimary
     };
 
     public static void checkAppCompatTheme(Context context) {
@@ -94,7 +108,6 @@ public final class ViewUtils {
     /**
      * 触发window的insets的广播，使得view的fitSystemWindows得以生效
      */
-    @SuppressWarnings("deprecation")
     public static void requestApplyInsets(Window window) {
         if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
             window.getDecorView().requestFitSystemWindows();
@@ -120,7 +133,6 @@ public final class ViewUtils {
         view.setPadding(padding[0], padding[1], padding[2], padding[3]);
     }
 
-    @SuppressWarnings("deprecation")
     public static void setBackgroundKeepingPadding(View view, int backgroundResId) {
         setBackgroundKeepingPadding(view, ContextCompat.getDrawable(view.getContext(), backgroundResId));
     }
@@ -263,11 +275,13 @@ public final class ViewUtils {
             return View.generateViewId();
         } else {
             for (; ; ) {
-                final int result = sNextGeneratedId.get();
+                final int result = ATOMIC_INTEGER.get();
                 // aapt-generated IDs have the high byte nonzero; clamp to the range under that.
                 int newValue = result + 1;
-                if (newValue > 0x00FFFFFF) newValue = 1; // Roll over to 1, not 0.
-                if (sNextGeneratedId.compareAndSet(result, newValue)) {
+                if (newValue > 0x00FFFFFF) {
+                    newValue = 1; // Roll over to 1, not 0.
+                }
+                if (ATOMIC_INTEGER.compareAndSet(result, newValue)) {
                     return result;
                 }
             }
@@ -275,6 +289,7 @@ public final class ViewUtils {
     }
 
     //======================动画===============================//
+
     /**
      * <p>对 View 做透明度变化的进场动画。</p>
      * <p>相关方法 {@link #fadeOut(View, int, Animation.AnimationListener, boolean)}</p>
@@ -469,6 +484,8 @@ public final class ViewUtils {
                             Animation.RELATIVE_TO_SELF, 1f, Animation.RELATIVE_TO_SELF, 0f
                     );
                     break;
+                default:
+                    break;
             }
             translate.setInterpolator(new DecelerateInterpolator());
             translate.setDuration(duration);
@@ -544,6 +561,8 @@ public final class ViewUtils {
                             Animation.RELATIVE_TO_SELF, 0f, Animation.RELATIVE_TO_SELF, -1f
                     );
                     break;
+                default:
+                    break;
             }
             translate.setInterpolator(new DecelerateInterpolator());
             translate.setDuration(duration);
@@ -579,6 +598,187 @@ public final class ViewUtils {
         }
     }
 
+
+    //=====================View 常用操作==============================//
+
+    /**
+     * 设置控件的可见度
+     *
+     * @param view   控件
+     * @param isShow 是否可见
+     */
+    public static void setVisibility(View view, boolean isShow) {
+        if (view != null) {
+            view.setVisibility(isShow ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * 设置控件的可见度
+     *
+     * @param view       控件
+     * @param visibility
+     */
+    public static void setVisibility(View view, int visibility) {
+        if (view != null) {
+            view.setVisibility(visibility);
+        }
+    }
+
+
+    /**
+     * 设置控件是否可用
+     *
+     * @param view    控件
+     * @param enabled 是否可用
+     */
+    public static void setEnabled(View view, boolean enabled) {
+        if (view != null) {
+            view.setEnabled(enabled);
+            if (view instanceof EditText) {
+                view.setFocusable(enabled);
+                view.setFocusableInTouchMode(enabled);
+            }
+        }
+    }
+
+    /**
+     * 设置控件的文字
+     *
+     * @param view 控件
+     * @param text 文字
+     */
+    public static void setText(TextView view, String text) {
+        if (view != null) {
+            view.setText(text);
+        }
+    }
+
+    /**
+     * 设置控件的文字
+     *
+     * @param view   控件
+     * @param textId 文字资源
+     */
+    public static void setText(TextView view, @StringRes int textId) {
+        if (view != null) {
+            view.setText(textId);
+        }
+    }
+
+    /**
+     * 设置控件的文字颜色
+     *
+     * @param view    控件
+     * @param colorId 文字颜色
+     */
+    public static void textColorId(TextView view, @ColorRes int colorId) {
+        if (view != null) {
+            view.setTextColor(ContextCompat.getColor(view.getContext(), colorId));
+        }
+    }
+
+    /**
+     * 设置控件的图片资源
+     *
+     * @param view    控件
+     * @param imageId 图片资源ID
+     */
+    public static void setImageResource(ImageView view, @DrawableRes int imageId) {
+        if (view != null) {
+            view.setImageResource(imageId);
+        }
+    }
+
+    /**
+     * 设置控件的图片资源
+     *
+     * @param view     控件
+     * @param drawable 图片资源
+     */
+    public static void setImageDrawable(ImageView view, Drawable drawable) {
+        if (view != null) {
+            view.setImageDrawable(drawable);
+        }
+    }
+
+    /**
+     * 设置控件的图片资源
+     *
+     * @param view 控件
+     * @param uri  图片资源
+     */
+    public static void setImageUri(ImageView view, Object uri) {
+        if (view != null) {
+            ImageLoader.get().loadImage(view, uri);
+        }
+    }
+
+    /**
+     * 设置图片的等级
+     *
+     * @param view  控件
+     * @param level 图片等级
+     */
+    public static void setImageLevel(ImageView view, int level) {
+        if (view != null) {
+            view.setImageLevel(level);
+        }
+    }
+
+    /**
+     * 给图片着色
+     *
+     * @param view 控件
+     * @param tint 着色
+     */
+    public static void setImageTint(ImageView view, ColorStateList tint) {
+        if (view != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                view.setImageTintList(tint);
+            }
+        }
+    }
+
+    /**
+     * 设置控件的选中状态
+     *
+     * @param view    控件
+     * @param isCheck 是否选中
+     */
+    public static void setChecked(CompoundButton view, boolean isCheck) {
+        if (view != null) {
+            view.setChecked(isCheck);
+        }
+    }
+
+    /**
+     * 设置控件的选中监听
+     *
+     * @param view                  控件
+     * @param checkedChangeListener 选中监听
+     */
+    public static void setOnCheckedChangeListener(CompoundButton view, CompoundButton.OnCheckedChangeListener checkedChangeListener) {
+        if (view != null) {
+            view.setOnCheckedChangeListener(checkedChangeListener);
+        }
+    }
+
+    /**
+     * 设置控件的选中状态【静默】
+     *
+     * @param view                  控件
+     * @param isCheck               是否选中
+     * @param checkedChangeListener 选中监听
+     */
+    public static void setCheckedSilent(CompoundButton view, boolean isCheck, CompoundButton.OnCheckedChangeListener checkedChangeListener) {
+        if (view != null) {
+            view.setOnCheckedChangeListener(null);
+            view.setChecked(isCheck);
+            view.setOnCheckedChangeListener(checkedChangeListener);
+        }
+    }
+
     //=====================设置Padding==============================//
 
 
@@ -608,6 +808,19 @@ public final class ViewUtils {
         }
     }
 
+
+    /**
+     * 设置控件的padding
+     *
+     * @param view    控件
+     * @param padding
+     */
+    public static void setPadding(View view, int padding) {
+        if (view != null) {
+            view.setPadding(padding, padding, padding, padding);
+        }
+    }
+
     /**
      * 对 View 设置 paddingLeft
      *
@@ -617,6 +830,18 @@ public final class ViewUtils {
     public static void setPaddingLeft(View view, int value) {
         if (value != view.getPaddingLeft()) {
             view.setPadding(value, view.getPaddingTop(), view.getPaddingRight(), view.getPaddingBottom());
+        }
+    }
+
+    /**
+     * 对 View 设置 paddingStart
+     *
+     * @param view  需要被设置的 View
+     * @param value 设置的值
+     */
+    public static void setPaddingStart(View view, int value) {
+        if (value != view.getPaddingStart()) {
+            view.setPaddingRelative(value, view.getPaddingTop(), view.getPaddingEnd(), view.getPaddingBottom());
         }
     }
 
@@ -641,6 +866,18 @@ public final class ViewUtils {
     public static void setPaddingRight(View view, int value) {
         if (value != view.getPaddingRight()) {
             view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), value, view.getPaddingBottom());
+        }
+    }
+
+    /**
+     * 对 View 设置 paddingEnd
+     *
+     * @param view  需要被设置的 View
+     * @param value 设置的值
+     */
+    public static void setPaddingEnd(View view, int value) {
+        if (value != view.getPaddingEnd()) {
+            view.setPaddingRelative(view.getPaddingStart(), view.getPaddingTop(), value, view.getPaddingBottom());
         }
     }
 
@@ -683,7 +920,7 @@ public final class ViewUtils {
         }
         View view = parentView.findViewById(inflatedViewId);
         if (null == view) {
-            ViewStub vs = (ViewStub) parentView.findViewById(viewStubId);
+            ViewStub vs = parentView.findViewById(viewStubId);
             if (null == vs) {
                 return null;
             }
@@ -698,13 +935,14 @@ public final class ViewUtils {
     /**
      * inflate ViewStub 并返回对应的 View。
      */
+    @SuppressLint("ResourceType")
     public static View findViewFromViewStub(View parentView, int viewStubId, int inflatedViewId, int inflateLayoutResId) {
         if (null == parentView) {
             return null;
         }
         View view = parentView.findViewById(inflatedViewId);
         if (null == view) {
-            ViewStub vs = (ViewStub) parentView.findViewById(viewStubId);
+            ViewStub vs = parentView.findViewById(viewStubId);
             if (null == vs) {
                 return null;
             }
@@ -777,24 +1015,24 @@ public final class ViewUtils {
 
 
     private static class ViewGroupHelper {
-        private static final ThreadLocal<Matrix> sMatrix = new ThreadLocal<>();
-        private static final ThreadLocal<RectF> sRectF = new ThreadLocal<>();
+        private static final ThreadLocal<Matrix> MATRIX_THREAD_LOCAL = new ThreadLocal<>();
+        private static final ThreadLocal<RectF> RECT_F_THREAD_LOCAL = new ThreadLocal<>();
 
         public static void offsetDescendantRect(ViewGroup group, View child, Rect rect) {
-            Matrix m = sMatrix.get();
+            Matrix m = MATRIX_THREAD_LOCAL.get();
             if (m == null) {
                 m = new Matrix();
-                sMatrix.set(m);
+                MATRIX_THREAD_LOCAL.set(m);
             } else {
                 m.reset();
             }
 
             offsetDescendantMatrix(group, child, m);
 
-            RectF rectF = sRectF.get();
+            RectF rectF = RECT_F_THREAD_LOCAL.get();
             if (rectF == null) {
                 rectF = new RectF();
-                sRectF.set(rectF);
+                RECT_F_THREAD_LOCAL.set(rectF);
             }
             rectF.set(rect);
             m.mapRect(rectF);
@@ -816,6 +1054,51 @@ public final class ViewUtils {
                 m.preConcat(view.getMatrix());
             }
         }
+    }
+
+    /**
+     * 设置控件的字体
+     *
+     * @param view     控件
+     * @param typeface 字体
+     */
+    public static void setViewTextFont(View view, Typeface typeface) {
+        if (view == null || typeface == null) {
+            return;
+        }
+        if (view instanceof TextView) {
+            ((TextView) view).setTypeface(typeface);
+        } else if (view instanceof ViewGroup) {
+            ViewGroup viewGroup = (ViewGroup) view;
+            for (int i = 0; i < viewGroup.getChildCount(); i++) {
+                setViewTextFont(viewGroup.getChildAt(i), typeface);
+            }
+        }
+    }
+
+    /**
+     * 设置控件的字体
+     *
+     * @param typeface 字体
+     * @param views    控件集合
+     */
+    public static void setViewsFont(Typeface typeface, View... views) {
+        if (typeface == null || views == null || views.length == 0) {
+            return;
+        }
+
+        for (View view : views) {
+            setViewTextFont(view, typeface);
+        }
+    }
+
+    /**
+     * 设置控件的字体
+     *
+     * @param views 控件集合
+     */
+    public static void setViewsFont(View... views) {
+        setViewsFont(XUI.getDefaultTypeface(), views);
     }
 
     /**

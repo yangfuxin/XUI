@@ -1,8 +1,8 @@
 package com.xuexiang.xuidemo.adapter;
 
-import com.scwang.smartrefresh.layout.adapter.SmartViewHolder;
+import com.xuexiang.xui.adapter.recyclerview.RecyclerViewHolder;
+import com.xuexiang.xui.widget.imageview.ImageLoader;
 import com.xuexiang.xui.widget.imageview.RadiusImageView;
-import com.xuexiang.xui.widget.imageview.preview.MediaLoader;
 import com.xuexiang.xuidemo.DemoDataProvider;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.base.BroccoliRecyclerAdapter;
@@ -22,8 +22,14 @@ public class NewsListAdapter extends BroccoliRecyclerAdapter<NewInfo> {
     private boolean mIsAnim;
 
     public NewsListAdapter(boolean isAnim) {
-        super(DemoDataProvider.getEmptyNewInfo(), R.layout.adapter_news_list_item);
+        super(DemoDataProvider.getEmptyNewInfo());
         mIsAnim = isAnim;
+    }
+
+
+    @Override
+    protected int getItemLayoutId(int viewType) {
+        return R.layout.adapter_news_list_item;
     }
 
     /**
@@ -34,7 +40,7 @@ public class NewsListAdapter extends BroccoliRecyclerAdapter<NewInfo> {
      * @param position
      */
     @Override
-    protected void onBindData(SmartViewHolder holder, NewInfo model, int position) {
+    protected void onBindData(RecyclerViewHolder holder, NewInfo model, int position) {
         holder.text(R.id.tv_user_name, model.getUserName());
         holder.text(R.id.tv_tag, model.getTag());
         holder.text(R.id.tv_title, model.getTitle());
@@ -44,7 +50,7 @@ public class NewsListAdapter extends BroccoliRecyclerAdapter<NewInfo> {
         holder.text(R.id.tv_read, "阅读量 " + model.getRead());
 
         RadiusImageView imageView = holder.findViewById(R.id.iv_image);
-        MediaLoader.getInstance().getImageLoader().displayImage(imageView.getContext(), model.getImageUrl(), imageView);
+        ImageLoader.get().loadImage(imageView, model.getImageUrl());
     }
 
     /**
@@ -54,7 +60,7 @@ public class NewsListAdapter extends BroccoliRecyclerAdapter<NewInfo> {
      * @param broccoli
      */
     @Override
-    protected void onBindBroccoli(SmartViewHolder holder, Broccoli broccoli) {
+    protected void onBindBroccoli(RecyclerViewHolder holder, Broccoli broccoli) {
         if (mIsAnim) {
             broccoli.addPlaceholder(PlaceholderHelper.getParameter(holder.findView(R.id.iv_avatar)))
                     .addPlaceholder(PlaceholderHelper.getParameter(holder.findView(R.id.tv_user_name)))

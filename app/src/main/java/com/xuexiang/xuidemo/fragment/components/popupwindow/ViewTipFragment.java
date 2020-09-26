@@ -8,7 +8,7 @@ import com.xuexiang.xpage.annotation.Page;
 import com.xuexiang.xui.widget.popupwindow.ViewTooltip;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -46,18 +46,8 @@ public class ViewTipFragment extends BaseFragment {
                 .clickToHide(true)
                 .autoHide(false, 0)
                 .animation(new ViewTooltip.FadeTooltipAnimation(500))
-                .onDisplay(new ViewTooltip.ListenerDisplay() {
-                    @Override
-                    public void onDisplay(View view) {
-                        ToastUtils.toast("onDisplay");
-                    }
-                })
-                .onHide(new ViewTooltip.ListenerHide() {
-                    @Override
-                    public void onHide(View view) {
-                        ToastUtils.toast("onHide");
-                    }
-                })
+                .onDisplay(view12 -> XToastUtils.toast("onDisplay"))
+                .onHide(view1 -> XToastUtils.toast("onHide"))
                 .show();
     }
 

@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.LightingColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -32,13 +33,17 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.FloatRange;
-import android.support.annotation.Nullable;
-import android.support.v7.content.res.AppCompatResources;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.ImageView;
+import android.widget.ScrollView;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.FloatRange;
+import androidx.annotation.Nullable;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.widget.NestedScrollView;
 
 import com.xuexiang.xui.logs.UILog;
 
@@ -56,8 +61,10 @@ public final class DrawableUtils {
 
     private static final String TAG = DrawableUtils.class.getSimpleName();
 
-    //节省每次创建时产生的开销，但要注意多线程操作synchronized
-    private static final Canvas sCanvas = new Canvas();
+    /**
+     * 节省每次创建时产生的开销，但要注意多线程操作synchronized
+     */
+    private static final Canvas CANVAS = new Canvas();
 
     /**
      * 从一个view创建Bitmap。
@@ -75,14 +82,28 @@ public final class DrawableUtils {
             }
         }
         view.clearFocus();
+        int viewHeight = 0;
+        if (view instanceof ScrollView) {
+            for (int i = 0; i < ((ScrollView) view).getChildCount(); i++) {
+                viewHeight += ((ScrollView) view).getChildAt(i).getHeight();
+            }
+        } else if (view instanceof NestedScrollView) {
+            for (int i = 0; i < ((NestedScrollView) view).getChildCount(); i++) {
+                viewHeight += ((NestedScrollView) view).getChildAt(i).getHeight();
+            }
+        } else {
+            viewHeight = view.getHeight();
+        }
+
         Bitmap bitmap = createBitmapSafely((int) (view.getWidth() * scale),
-                (int) (view.getHeight() * scale), Bitmap.Config.ARGB_8888, 1);
+                (int) (viewHeight * scale), Bitmap.Config.ARGB_8888, 1);
         if (bitmap != null) {
-            synchronized (sCanvas) {
-                Canvas canvas = sCanvas;
+            synchronized (CANVAS) {
+                Canvas canvas = CANVAS;
                 canvas.setBitmap(bitmap);
                 canvas.save();
-                canvas.drawColor(Color.WHITE); // 防止 View 上面有些区域空白导致最终 Bitmap 上有些区域变黑
+                // 防止 View 上面有些区域空白导致最终 Bitmap 上有些区域变黑
+                canvas.drawColor(Color.WHITE);
                 canvas.scale(scale, scale);
                 view.draw(canvas);
                 canvas.restore();
@@ -91,6 +112,45 @@ public final class DrawableUtils {
         }
         return bitmap;
     }
+
+
+    public static Bitmap createBitmapFromWebView(WebView view) {
+        return createBitmapFromWebView(view, 1f);
+    }
+
+    public static Bitmap createBitmapFromWebView(WebView view, float scale) {
+        view.clearFocus();
+        int viewHeight = (int) (view.getContentHeight() * view.getScale());
+        Bitmap bitmap = createBitmapSafely((int) (view.getWidth() * scale), (int) (viewHeight * scale), Bitmap.Config.ARGB_8888, 1);
+
+        int unitHeight = view.getHeight();
+        int bottom = viewHeight;
+
+        if (bitmap != null) {
+            synchronized (CANVAS) {
+                Canvas canvas = CANVAS;
+                canvas.setBitmap(bitmap);
+                // 防止 View 上面有些区域空白导致最终 Bitmap 上有些区域变黑
+                canvas.drawColor(Color.WHITE);
+                canvas.scale(scale, scale);
+                while (bottom > 0) {
+                    if (bottom < unitHeight) {
+                        bottom = 0;
+                    } else {
+                        bottom -= unitHeight;
+                    }
+                    canvas.save();
+                    canvas.clipRect(0, bottom, canvas.getWidth(), bottom + unitHeight);
+                    view.scrollTo(0, bottom);
+                    view.draw(canvas);
+                    canvas.restore();
+                }
+                canvas.setBitmap(null);
+            }
+        }
+        return bitmap;
+    }
+
 
     public static Bitmap createBitmapFromView(View view) {
         return createBitmapFromView(view, 1f);
@@ -128,6 +188,10 @@ public final class DrawableUtils {
      * @return 返回创建的 Bitmap。
      */
     public static Bitmap createBitmapSafely(int width, int height, Bitmap.Config config, int retryCount) {
+        //width and height must be > 0
+        if (width <= 0 || height <= 0) {
+            return null;
+        }
         try {
             return Bitmap.createBitmap(width, height, config);
         } catch (OutOfMemoryError e) {
@@ -175,7 +239,7 @@ public final class DrawableUtils {
      */
     public static ColorFilter setDrawableTintColor(Drawable drawable, @ColorInt int tintColor) {
         LightingColorFilter colorFilter = new LightingColorFilter(Color.argb(255, 0, 0, 0), tintColor);
-        if(drawable != null){
+        if (drawable != null) {
             drawable.setColorFilter(colorFilter);
         }
         return colorFilter;
@@ -185,17 +249,18 @@ public final class DrawableUtils {
      * 由一个drawable生成bitmap
      */
     public static Bitmap drawableToBitmap(Drawable drawable) {
-        if (drawable == null)
+        if (drawable == null) {
             return null;
-        else if (drawable instanceof BitmapDrawable) {
+        } else if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
         }
 
         int intrinsicWidth = drawable.getIntrinsicWidth();
         int intrinsicHeight = drawable.getIntrinsicHeight();
 
-        if (!(intrinsicWidth > 0 && intrinsicHeight > 0))
+        if (!(intrinsicWidth > 0 && intrinsicHeight > 0)) {
             return null;
+        }
 
         try {
             Bitmap.Config config = drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
@@ -262,12 +327,9 @@ public final class DrawableUtils {
         return layerDrawable;
     }
 
-
     /////////////// VectorDrawable /////////////////////
-
-    public static
     @Nullable
-    Drawable getVectorDrawable(Context context, @DrawableRes int resVector) {
+    public static Drawable getVectorDrawable(Context context, @DrawableRes int resVector) {
         try {
             return AppCompatResources.getDrawable(context, resVector);
         } catch (Exception e) {
@@ -289,4 +351,135 @@ public final class DrawableUtils {
     }
 
     /////////////// VectorDrawable /////////////////////
+
+    /**
+     * 获取支持RTL布局的drawable【如果是RTL布局就旋转180度】
+     *
+     * @param src 原drawable
+     * @return
+     */
+    public static Drawable getSupportRTLDrawable(Drawable src) {
+        return getSupportRTLDrawable(src, false);
+    }
+
+    /**
+     * 获取支持RTL布局的drawable【如果是RTL布局就旋转180度】
+     *
+     * @param src 原drawable
+     * @return
+     */
+    public static Drawable getSupportRTLDrawable(Drawable src, boolean recycle) {
+        if (ResUtils.isRtl()) {
+            return rotate(src, 180, 0, 0, recycle);
+        }
+        return src;
+    }
+
+    /**
+     * Return the rotated drawable.
+     *
+     * @param src     The source of drawable.
+     * @param degrees The number of degrees.
+     * @param px      The x coordinate of the pivot point.
+     * @param py      The y coordinate of the pivot point.
+     * @param recycle True to recycle the source of drawable, false otherwise.
+     * @return the rotated drawable
+     */
+    public static Drawable rotate(final Drawable src,
+                                  final int degrees,
+                                  final float px,
+                                  final float py,
+                                  final boolean recycle) {
+        return bitmap2Drawable(rotate(drawable2Bitmap(src), degrees, px, py, recycle));
+    }
+
+    /**
+     * Return the rotated bitmap.
+     *
+     * @param src     The source of bitmap.
+     * @param degrees The number of degrees.
+     * @param px      The x coordinate of the pivot point.
+     * @param py      The y coordinate of the pivot point.
+     * @param recycle True to recycle the source of bitmap, false otherwise.
+     * @return the rotated bitmap
+     */
+    public static Bitmap rotate(final Bitmap src,
+                                final int degrees,
+                                final float px,
+                                final float py,
+                                final boolean recycle) {
+        if (isEmptyBitmap(src)) {
+            return null;
+        }
+        if (src.isRecycled()) {
+            return null;
+        }
+        if (degrees == 0) {
+            return src;
+        }
+        Matrix matrix = new Matrix();
+        matrix.setRotate(degrees, px, py);
+        Bitmap ret = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), matrix, true);
+        if (recycle && !src.isRecycled()) {
+            src.recycle();
+        }
+        return ret;
+    }
+
+    private static boolean isEmptyBitmap(final Bitmap src) {
+        return src == null || src.getWidth() == 0 || src.getHeight() == 0;
+    }
+
+    /**
+     * 获取图片
+     *
+     * @param context 上下文
+     * @param resId   图片资源
+     * @return 图片
+     */
+    public static Bitmap getBitmapByDrawableId(Context context, @DrawableRes int resId) {
+        return drawable2Bitmap(ResUtils.getDrawable(context, resId));
+    }
+
+    /**
+     * Drawable to bitmap.
+     *
+     * @param drawable The drawable.
+     * @return bitmap
+     */
+    public static Bitmap drawable2Bitmap(final Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            if (bitmapDrawable.getBitmap() != null) {
+                return bitmapDrawable.getBitmap();
+            }
+        }
+        Bitmap bitmap;
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            bitmap = Bitmap.createBitmap(1, 1,
+                    drawable.getOpacity() != PixelFormat.OPAQUE
+                            ? Bitmap.Config.ARGB_8888
+                            : Bitmap.Config.RGB_565);
+        } else {
+            bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                    drawable.getIntrinsicHeight(),
+                    drawable.getOpacity() != PixelFormat.OPAQUE
+                            ? Bitmap.Config.ARGB_8888
+                            : Bitmap.Config.RGB_565);
+        }
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+    /**
+     * Bitmap to drawable.
+     *
+     * @param bitmap The bitmap.
+     * @return drawable
+     */
+    public static Drawable bitmap2Drawable(final Bitmap bitmap) {
+        return bitmap == null ? null : new BitmapDrawable(ResUtils.getResources(), bitmap);
+    }
 }

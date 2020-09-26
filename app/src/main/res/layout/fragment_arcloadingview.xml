@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -20,15 +20,15 @@
                 android:layout_margin="20dp"
                 android:orientation="horizontal">
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_switch"
-                    style="@style/Button.Blue"
+                    style="@style/Button.Primary"
                     android:text="开始" />
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_loading_dialog"
-                    style="@style/Button.Blue"
-                    android:layout_marginLeft="20dp"
+                    style="@style/Button.Primary"
+                    android:layout_marginStart="20dp"
                     android:text="loading弹窗" />
 
             </LinearLayout>
@@ -39,15 +39,15 @@
                 android:layout_margin="20dp"
                 android:orientation="horizontal">
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_loading_layout"
-                    style="@style/Button.Blue"
+                    style="@style/Button.Primary"
                     android:text="loading布局" />
 
-                <Button
+                <com.xuexiang.xui.widget.alpha.XUIAlphaButton
                     android:id="@+id/btn_test_dialog"
-                    style="@style/Button.Blue"
-                    android:layout_marginLeft="20dp"
+                    style="@style/Button.Primary"
+                    android:layout_marginStart="20dp"
                     android:text="测试弹窗" />
 
             </LinearLayout>
@@ -101,6 +101,6 @@
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

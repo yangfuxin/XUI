@@ -11,11 +11,6 @@ import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -25,6 +20,12 @@ import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatTextView;
 
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.logs.UILog;
@@ -57,82 +58,80 @@ public class MaterialSpinner extends AppCompatTextView {
     private int mPopupWindowHeight;
     private int mSelectedIndex;
     private int mBackgroundColor;
-    private int mBackgroundSelector;
     private int mArrowColor;
     private int mArrowColorDisabled;
     private int mTextColor;
-    private int mEntriesID;
-    private Drawable mDropDownBg;
     private boolean mIsInDialog;
-
-    private int dropDownOffset;
+    private int mDropDownOffset;
 
     public MaterialSpinner(Context context) {
-        super(context);
-        init(context, null);
+        this(context, null);
     }
 
     public MaterialSpinner(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
+        this(context, attrs, R.attr.MaterialSpinnerStyle);
     }
 
     public MaterialSpinner(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context, attrs);
+        initAttrs(context, attrs, defStyleAttr);
     }
 
-    private void init(Context context, AttributeSet attrs) {
-        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.MaterialSpinner);
+    /**
+     * 初始化属性
+     *
+     * @param context
+     * @param attrs
+     * @param defStyleAttr
+     */
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.MaterialSpinner, defStyleAttr, 0);
         int defaultColor = getTextColors().getDefaultColor();
         boolean rtl = ResUtils.isRtl();
 
+        int popAnimStyle;
+        Drawable dropDownBg;
+        int entriesId;
+        int backgroundSelector;
         try {
-            mBackgroundColor = ta.getColor(R.styleable.MaterialSpinner_ms_background_color, Color.WHITE);
-            mBackgroundSelector = ta.getResourceId(R.styleable.MaterialSpinner_ms_background_selector, 0);
-            mTextColor = ta.getColor(R.styleable.MaterialSpinner_ms_text_color, defaultColor);
-            mArrowColor = ta.getColor(R.styleable.MaterialSpinner_ms_arrow_tint, mTextColor);
-            mHideArrow = ta.getBoolean(R.styleable.MaterialSpinner_ms_hide_arrow, false);
-            mPopupWindowMaxHeight = ta.getDimensionPixelSize(R.styleable.MaterialSpinner_ms_dropdown_max_height, 0);
-            mPopupWindowHeight = ta.getLayoutDimension(R.styleable.MaterialSpinner_ms_dropdown_height, WindowManager.LayoutParams.WRAP_CONTENT);
+            mBackgroundColor = typedArray.getColor(R.styleable.MaterialSpinner_ms_background_color, Color.WHITE);
+            backgroundSelector = typedArray.getResourceId(R.styleable.MaterialSpinner_ms_background_selector, 0);
+            mTextColor = typedArray.getColor(R.styleable.MaterialSpinner_ms_text_color, defaultColor);
+
+            mArrowDrawable = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.MaterialSpinner_ms_arrow_image);
+            mArrowColor = typedArray.getColor(R.styleable.MaterialSpinner_ms_arrow_tint, mTextColor);
+            mHideArrow = typedArray.getBoolean(R.styleable.MaterialSpinner_ms_hide_arrow, false);
+            mPopupWindowMaxHeight = typedArray.getDimensionPixelSize(R.styleable.MaterialSpinner_ms_dropdown_max_height, 0);
+            mPopupWindowHeight = typedArray.getLayoutDimension(R.styleable.MaterialSpinner_ms_dropdown_height, WindowManager.LayoutParams.WRAP_CONTENT);
             mArrowColorDisabled = ResUtils.lighter(mArrowColor, 0.8f);
-            mEntriesID = ta.getResourceId(R.styleable.MaterialSpinner_ms_entries, 0);
-            mDropDownBg = ta.getDrawable(R.styleable.MaterialSpinner_ms_dropdown_bg);
-            mIsInDialog = ta.getBoolean(R.styleable.MaterialSpinner_ms_in_dialog, false);
+            entriesId = typedArray.getResourceId(R.styleable.MaterialSpinner_ms_entries, 0);
+            dropDownBg = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.MaterialSpinner_ms_dropdown_bg);
+            mIsInDialog = typedArray.getBoolean(R.styleable.MaterialSpinner_ms_in_dialog, false);
+            popAnimStyle = typedArray.getResourceId(R.styleable.MaterialSpinner_ms_pop_anim_style, -1);
 
         } finally {
-            ta.recycle();
+            typedArray.recycle();
         }
 
         int left, right, bottom, top;
-        left = right = bottom = top = ThemeUtils.resolveDimension(getContext(), R.attr.ms_padding_top_size);
-        if (rtl) {
-            right = ThemeUtils.resolveDimension(getContext(), R.attr.ms_padding_left_size);
-        } else {
-            left = ThemeUtils.resolveDimension(getContext(), R.attr.ms_padding_left_size);
-        }
+        right = bottom = top = ThemeUtils.resolveDimension(getContext(), R.attr.ms_padding_top_size);
+        left = ThemeUtils.resolveDimension(getContext(), R.attr.ms_padding_left_size);
 
-        dropDownOffset = ThemeUtils.resolveDimension(getContext(), R.attr.ms_dropdown_offset);
+        mDropDownOffset = ThemeUtils.resolveDimension(getContext(), R.attr.ms_dropdown_offset);
 
         setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
         setClickable(true);
-        setPadding(left, top, right, bottom);
+        setPaddingRelative(left, top, right, bottom);
         setBackgroundResource(R.drawable.ms_background_selector);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && rtl) {
-            setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-            setTextDirection(View.TEXT_DIRECTION_RTL);
-        }
 
         if (!mHideArrow) {
-            mArrowDrawable = ResUtils.getDrawable(getContext(), R.drawable.ms_ic_arrow_up).mutate();
+            if (mArrowDrawable == null) {
+                mArrowDrawable = ResUtils.getVectorDrawable(getContext(), R.drawable.ms_ic_arrow_up).mutate();
+            }
             mArrowDrawable.setColorFilter(mArrowColor, PorterDuff.Mode.SRC_IN);
             int arrowSize = ThemeUtils.resolveDimension(getContext(), R.attr.ms_arrow_size);
             mArrowDrawable.setBounds(0, 0, arrowSize, arrowSize);
-            if (rtl) {
-                setCompoundDrawablesWithIntrinsicBounds(mArrowDrawable, null, null, null);
-            } else {
-                setCompoundDrawablesWithIntrinsicBounds(null, null, mArrowDrawable, null);
-            }
+            setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, mArrowDrawable, null);
         }
 
         mListView = new ListView(context);
@@ -160,13 +159,16 @@ public class MaterialSpinner extends AppCompatTextView {
                 }
             }
         });
-        if (mEntriesID != 0) {
-            setItems(ResUtils.getStringArray(mEntriesID));
+        if (entriesId != 0) {
+            setItems(ResUtils.getStringArray(entriesId));
         }
 
         mPopupWindow = new PopupWindow(context);
         mPopupWindow.setContentView(mListView);
         mPopupWindow.setOutsideTouchable(true);
+        if (popAnimStyle != -1) {
+            mPopupWindow.setAnimationStyle(popAnimStyle);
+        }
         mPopupWindow.setFocusable(true);
         mPopupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
         mPopupWindow.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
@@ -175,16 +177,16 @@ public class MaterialSpinner extends AppCompatTextView {
             mPopupWindow.setElevation(16);
         }
 
-        if (mDropDownBg != null) {
-            mPopupWindow.setBackgroundDrawable(mDropDownBg);
+        if (dropDownBg != null) {
+            mPopupWindow.setBackgroundDrawable(dropDownBg);
         } else {
             mPopupWindow.setBackgroundDrawable(ResUtils.getDrawable(getContext(), R.drawable.ms_drop_down_bg));
         }
-
-        if (mBackgroundColor != Color.WHITE) { // default color is white
+        // default color is white
+        if (mBackgroundColor != Color.WHITE) {
             setBackgroundColor(mBackgroundColor);
-        } else if (mBackgroundSelector != 0) {
-            setBackgroundResource(mBackgroundSelector);
+        } else if (backgroundSelector != 0) {
+            setBackgroundResource(backgroundSelector);
         }
         if (mTextColor != defaultColor) {
             setTextColor(mTextColor);
@@ -246,7 +248,9 @@ public class MaterialSpinner extends AppCompatTextView {
         if (background instanceof StateListDrawable) { // pre-L
             try {
                 Method getStateDrawable = StateListDrawable.class.getDeclaredMethod("getStateDrawable", int.class);
-                if (!getStateDrawable.isAccessible()) getStateDrawable.setAccessible(true);
+                if (!getStateDrawable.isAccessible()) {
+                    getStateDrawable.setAccessible(true);
+                }
                 int[] colors = {ResUtils.darker(color, 0.85f), color};
                 for (int i = 0; i < colors.length; i++) {
                     ColorDrawable drawable = (ColorDrawable) getStateDrawable.invoke(background, i);
@@ -362,16 +366,14 @@ public class MaterialSpinner extends AppCompatTextView {
      * @return
      */
     public <T> int getSpinnerPosition(T item, List<T> items) {
-        int position = 0;
         if (item != null && items != null && items.size() > 0) {
             for (int i = 0; i < items.size(); i++) {
                 if (item.equals(items.get(i))) {
-                    position = i;
-                    break;
+                    return i;
                 }
             }
         }
-        return position;
+        return 0;
     }
 
     /**
@@ -411,7 +413,8 @@ public class MaterialSpinner extends AppCompatTextView {
      * @param items A list of items
      * @param <T>   The item type
      */
-    public <T> MaterialSpinner setItems(@NonNull T... items) {
+    @SafeVarargs
+    public final <T> MaterialSpinner setItems(@NonNull T... items) {
         setItems(Arrays.asList(items));
         return this;
     }
@@ -558,8 +561,8 @@ public class MaterialSpinner extends AppCompatTextView {
      * @return window显示的左上角的xOff, yOff坐标
      */
     private int[] calculatePopWindowPos(final View anchorView) {
-        final int windowPos[] = new int[2];
-        final int anchorLoc[] = new int[2];
+        final int[] windowPos = new int[2];
+        final int[] anchorLoc = new int[2];
         // 获取锚点View在屏幕上的左上角坐标位置
         anchorView.getLocationOnScreen(anchorLoc);
         final int anchorHeight = anchorView.getHeight();
@@ -574,7 +577,7 @@ public class MaterialSpinner extends AppCompatTextView {
         final boolean isNeedShowUp = (screenHeight - anchorLoc[1] - anchorHeight < listViewHeight);
         if (isNeedShowUp) {
             windowPos[0] = anchorLoc[0];
-            windowPos[1] = anchorLoc[1] - listViewHeight - dropDownOffset;
+            windowPos[1] = anchorLoc[1] - listViewHeight - mDropDownOffset;
         } else {
             windowPos[0] = anchorLoc[0];
             windowPos[1] = anchorLoc[1] + anchorHeight;
@@ -591,7 +594,7 @@ public class MaterialSpinner extends AppCompatTextView {
      */
     private int calculatePopWindowYOffset(final View anchorView) {
         int windowYOffset;
-        final int anchorLoc[] = new int[2];
+        final int[] anchorLoc = new int[2];
         // 获取锚点View在屏幕上的左上角坐标位置
         anchorView.getLocationOnScreen(anchorLoc);
         final int anchorHeight = anchorView.getHeight();
@@ -605,7 +608,7 @@ public class MaterialSpinner extends AppCompatTextView {
         // 判断需要向上弹出还是向下弹出显示
         final boolean isNeedShowUp = (screenHeight - anchorLoc[1] < listViewHeight + anchorHeight);
         if (isNeedShowUp) {
-            windowYOffset = -(listViewHeight + dropDownOffset + anchorHeight);
+            windowYOffset = -(listViewHeight + mDropDownOffset + anchorHeight);
         } else {
             windowYOffset = 0;
         }

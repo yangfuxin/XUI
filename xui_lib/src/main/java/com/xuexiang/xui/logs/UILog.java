@@ -1,6 +1,6 @@
 package com.xuexiang.xui.logs;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -69,6 +69,10 @@ public final class UILog {
      */
     public static void setDebug(boolean isDebug) {
         sIsDebug = isDebug;
+    }
+
+    public static boolean isDebug() {
+        return sIsDebug;
     }
 
     /**

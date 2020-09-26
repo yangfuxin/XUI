@@ -9,8 +9,8 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.fragment.expands.floatview.AppSwitchView;
@@ -118,12 +118,9 @@ public class AppMonitorService extends Service {
         mAppSwitchView.updateAppInfo(appName, appPackageName);
 
         if (mAppMonitor == null) {
-            mAppMonitor = new AppMonitor(this, new AppMonitor.OnAppListener() {
-                @Override
-                public void onAppChanged(String appName, String packageName) {
-                    if (mAppSwitchView != null) {
-                        mAppSwitchView.updateAppInfo(appName, packageName);
-                    }
+            mAppMonitor = new AppMonitor(this, (appName1, packageName) -> {
+                if (mAppSwitchView != null) {
+                    mAppSwitchView.updateAppInfo(appName1, packageName);
                 }
             });
             mAppMonitor.updateUid(uid).start();

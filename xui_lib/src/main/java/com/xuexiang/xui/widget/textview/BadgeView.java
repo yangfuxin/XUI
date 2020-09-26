@@ -25,7 +25,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
-import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -35,6 +34,8 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.TabWidget;
+
+import androidx.appcompat.widget.AppCompatTextView;
 
 /**
  * 数字提示
@@ -86,7 +87,6 @@ public class BadgeView extends AppCompatTextView {
         setHideOnNull(true);
     }
 
-    @SuppressWarnings("deprecation")
     public void setBackground(int dipRadius, int badgeColor) {
         int radius = dip2Px(dipRadius);
         float[] radiusArray = new float[]{radius, radius, radius, radius, radius, radius, radius, radius};
@@ -113,14 +113,9 @@ public class BadgeView extends AppCompatTextView {
         setText(getText());
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see android.widget.TextView#setText(java.lang.CharSequence, android.widget.TextView.BufferType)
-     */
     @Override
     public void setText(CharSequence text, BufferType type) {
-        if (isHideOnNull() && (text == null || text.toString().equalsIgnoreCase("0"))) {
+        if (isHideOnNull() && (text == null || "0".equalsIgnoreCase(text.toString()))) {
             setVisibility(View.GONE);
         } else {
             setVisibility(View.VISIBLE);

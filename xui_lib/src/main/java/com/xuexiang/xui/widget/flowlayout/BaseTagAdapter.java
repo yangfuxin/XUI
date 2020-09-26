@@ -2,7 +2,7 @@ package com.xuexiang.xui.widget.flowlayout;
 
 import android.content.Context;
 
-import com.xuexiang.xui.adapter.BaseListAdapter;
+import com.xuexiang.xui.adapter.listview.BaseListAdapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,9 +19,21 @@ public abstract class BaseTagAdapter<T, H> extends BaseListAdapter<T, H> impleme
      * 初始化选中的位置
      */
     private List<Integer> mPositions = new ArrayList<>();
+    /**
+     * 当前选中的索引集合
+     */
+    private List<Integer> mSelectedIndexs;
 
     public BaseTagAdapter(Context context) {
         super(context);
+    }
+
+    public BaseTagAdapter(Context context, List<T> data) {
+        super(context, data);
+    }
+
+    public BaseTagAdapter(Context context, T[] data) {
+        super(context, data);
     }
 
     /**
@@ -122,8 +134,8 @@ public abstract class BaseTagAdapter<T, H> extends BaseListAdapter<T, H> impleme
      */
     public BaseTagAdapter setSelectedPositions(int[] ps) {
         mPositions.clear();
-        for (int i = 0; i < ps.length; i++) {
-            mPositions.add(ps[i]);
+        for (int p : ps) {
+            mPositions.add(p);
         }
         notifyDataSetChanged();
         return this;
@@ -152,5 +164,47 @@ public abstract class BaseTagAdapter<T, H> extends BaseListAdapter<T, H> impleme
      */
     public List<Integer> getInitSelectedPositions() {
         return mPositions;
+    }
+
+    /**
+     * @param selectedIndexs
+     * @return
+     */
+    public BaseTagAdapter setSelectedIndexs(List<Integer> selectedIndexs) {
+        mSelectedIndexs = selectedIndexs;
+        return this;
+    }
+
+    /**
+     * 获取选中索引的集合
+     * @return
+     */
+    public List<Integer> getSelectedIndexs() {
+        if (mSelectedIndexs != null) {
+            return mSelectedIndexs;
+        } else {
+            return getInitSelectedPositions();
+        }
+    }
+
+    /**
+     * 获取选中索引
+     * @return
+     */
+    public int getSelectedIndex() {
+        List<Integer> indexs = getSelectedIndexs();
+        if (indexs != null && indexs.size() > 0) {
+            return indexs.get(0);
+        }
+        return -1;
+    }
+
+    /**
+     * 获取选中索引
+     * @return
+     */
+    public T getSelectedItem() {
+        int selectedIndex = getSelectedIndex();
+        return getItem(selectedIndex);
     }
 }

@@ -12,6 +12,7 @@ import com.xuexiang.xui.R;
 import com.xuexiang.xui.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 一个方便在多种状态切换的view
@@ -53,19 +54,19 @@ public class MultipleStatusView extends FrameLayout {
     /**
      * 空白页面资源id
      */
-    private int mEmptyViewResId;
+    private int mEmptyViewResId = R.layout.msv_layout_empty_view;
     /**
      * 出错页面资源id
      */
-    private int mErrorViewResId;
+    private int mErrorViewResId = R.layout.msv_layout_error_view;
     /**
      * loading加载页面资源id
      */
-    private int mLoadingViewResId;
+    private int mLoadingViewResId = R.layout.msv_layout_loading_view;
     /**
      * 无网页面资源id
      */
-    private int mNoNetworkViewResId;
+    private int mNoNetworkViewResId = R.layout.msv_layout_no_network_view;
     /**
      * 主内容页面资源id
      */
@@ -81,16 +82,14 @@ public class MultipleStatusView extends FrameLayout {
      */
     private OnClickListener mOnRetryClickListener;
 
-    private final ArrayList<Integer> mOtherIds = new ArrayList<>();
+    private final List<Integer> mOtherIds = new ArrayList<>();
 
     public MultipleStatusView(Context context) {
-        super(context);
-        initAttrs(context, null, 0);
+        this(context, null);
     }
 
     public MultipleStatusView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initAttrs(context, attrs, 0);
+        this(context, attrs, R.attr.MultipleStatusViewStyle);
     }
 
     public MultipleStatusView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -100,10 +99,10 @@ public class MultipleStatusView extends FrameLayout {
 
     private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
         final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.MultipleStatusView, defStyleAttr, 0);
-        mEmptyViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_emptyView, R.layout.msv_empty_view);
-        mErrorViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_errorView, R.layout.msv_error_view);
-        mLoadingViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_loadingView, R.layout.msv_loading_view);
-        mNoNetworkViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_noNetworkView, R.layout.msv_no_network_view);
+        mEmptyViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_emptyView, mEmptyViewResId);
+        mErrorViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_errorView, mErrorViewResId);
+        mLoadingViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_loadingView, mLoadingViewResId);
+        mNoNetworkViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_noNetworkView, mNoNetworkViewResId);
         mContentViewResId = a.getResourceId(R.styleable.MultipleStatusView_msv_contentView, NULL_RESOURCE_ID);
         a.recycle();
         mInflater = LayoutInflater.from(getContext());
@@ -119,12 +118,8 @@ public class MultipleStatusView extends FrameLayout {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         clear(mEmptyView, mLoadingView, mErrorView, mNoNetworkView);
-        if (null != mOtherIds) {
-            mOtherIds.clear();
-        }
-        if (null != mOnRetryClickListener) {
-            mOnRetryClickListener = null;
-        }
+        mOtherIds.clear();
+        mOnRetryClickListener = null;
         mInflater = null;
     }
 
@@ -299,6 +294,26 @@ public class MultipleStatusView extends FrameLayout {
             addView(mContentView, 0, DEFAULT_LAYOUT_PARAMS);
         }
         showContentView();
+    }
+
+    public View getErrorView() {
+        return mErrorView;
+    }
+
+    public View getEmptyView() {
+        return mEmptyView;
+    }
+
+    public View getLoadingView() {
+        return mLoadingView;
+    }
+
+    public View getNoNetworkView() {
+        return mNoNetworkView;
+    }
+
+    public View getContentView() {
+        return mContentView;
     }
 
     private void showContentView() {

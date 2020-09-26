@@ -18,9 +18,9 @@ package com.xuexiang.xui.widget.imageview.preview.loader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -126,11 +126,11 @@ public class GlideMediaLoader implements IMediaLoader {
     /**
      * 停止
      *
-     * @param c 容器
+     * @param context 容器
      **/
     @Override
-    public void clearMemory(@NonNull Context c) {
-        Glide.get(c).clearMemory();
+    public void clearMemory(@NonNull Context context) {
+        Glide.get(context).clearMemory();
     }
 
 

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2019 xuexiangjys(xuexiangjys@163.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.xuexiang.xui.widget.actionbar;
 
 import android.content.Context;
@@ -6,6 +23,8 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -16,17 +35,22 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.StringRes;
+
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.XUI;
 import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.utils.ResUtils;
 import com.xuexiang.xui.utils.ThemeUtils;
+import com.xuexiang.xui.widget.alpha.XUIAlphaImageView;
+import com.xuexiang.xui.widget.alpha.XUIAlphaLinearLayout;
 import com.xuexiang.xui.widget.alpha.XUIAlphaTextView;
 import com.xuexiang.xui.widget.textview.AutoMoveTextView;
 
 import java.util.LinkedList;
 
-import uk.co.chrisjenx.calligraphy.HasTypeface;
+import io.github.inflationx.calligraphy3.HasTypeface;
 
 /**
  * 标题栏
@@ -36,14 +60,13 @@ import uk.co.chrisjenx.calligraphy.HasTypeface;
  */
 public class TitleBar extends ViewGroup implements View.OnClickListener, HasTypeface {
     private static final String STATUS_BAR_HEIGHT_RES_NAME = "status_bar_height";
-    /**
-     * 文字默认白色
-     */
-    private static int DEFAULT_TEXT_COLOR = Color.WHITE;
+    public static final int CENTER_CENTER = 0;
+    public static final int CENTER_LEFT = 1;
+    public static final int CENTER_RIGHT = 2;
 
     private XUIAlphaTextView mLeftText;
+    private XUIAlphaLinearLayout mCenterLayout;
     private LinearLayout mRightLayout;
-    private LinearLayout mCenterLayout;
     private TextView mCenterText;
     private TextView mSubTitleText;
     private View mCustomCenterView;
@@ -73,6 +96,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
      * 左右侧文字的padding
      */
     private int mSideTextPadding;
+    private int mCenterGravity;
 
     private int mSideTextSize;
     private int mTitleTextSize;
@@ -89,55 +113,51 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     private String mTitleTextString;
     private String mSubTextString;
     private int mDividerColor;
+    private int mDivideHeight;
+    private boolean mIsUseThemeColor;
 
     public TitleBar(Context context) {
-        super(context);
-        initAttrs(context, null);
-        init(context);
+        this(context, null);
     }
 
     public TitleBar(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initAttrs(context, attrs);
-        init(context);
+        this(context, attrs, R.attr.TitleBarStyle);
     }
 
     public TitleBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initAttrs(context, attrs);
+        initAttrs(context, attrs, defStyleAttr);
         init(context);
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        if (isInEditMode()) {
-            return;
-        }
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TitleBar);
-        if (typedArray != null) {
-            mBarHeight = typedArray.getDimensionPixelOffset(R.styleable.TitleBar_tb_barHeight, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_height));
-            mImmersive = typedArray.getBoolean(R.styleable.TitleBar_tb_immersive, false);
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TitleBar, defStyleAttr, 0);
+        mBarHeight = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_barHeight, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_height));
+        mImmersive = typedArray.getBoolean(R.styleable.TitleBar_tb_immersive, ThemeUtils.resolveBoolean(context, R.attr.xui_actionbar_immersive));
 
-            mActionPadding = typedArray.getDimensionPixelOffset(R.styleable.TitleBar_tb_actionPadding, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_padding));
-            mSideTextPadding = typedArray.getDimensionPixelOffset(R.styleable.TitleBar_tb_sideTextPadding, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_side_text_padding));
+        mActionPadding = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_actionPadding, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_padding));
+        mSideTextPadding = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_sideTextPadding, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_side_text_padding));
+        mCenterGravity = typedArray.getInt(R.styleable.TitleBar_tb_centerGravity, CENTER_CENTER);
 
-            mSideTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_sideTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_text_size));
-            mTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_titleTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_title_text_size));
-            mSubTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_subTitleTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_sub_text_size));
-            mActionTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_actionTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_text_size));
+        mSideTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_sideTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_text_size));
+        mTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_titleTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_title_text_size));
+        mSubTitleTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_subTitleTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_sub_text_size));
+        mActionTextSize = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_actionTextSize, ThemeUtils.resolveDimension(context, R.attr.xui_actionbar_action_text_size));
 
-            mSideTextColor = typedArray.getColor(R.styleable.TitleBar_tb_sideTextColor, DEFAULT_TEXT_COLOR);
-            mTitleTextColor = typedArray.getColor(R.styleable.TitleBar_tb_titleTextColor, DEFAULT_TEXT_COLOR);
-            mSubTitleTextColor = typedArray.getColor(R.styleable.TitleBar_tb_subTitleTextColor, DEFAULT_TEXT_COLOR);
-            mActionTextColor = typedArray.getColor(R.styleable.TitleBar_tb_actionTextColor, DEFAULT_TEXT_COLOR);
+        mSideTextColor = typedArray.getColor(R.styleable.TitleBar_tb_sideTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_actionbar_text_color, Color.WHITE));
+        mTitleTextColor = typedArray.getColor(R.styleable.TitleBar_tb_titleTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_actionbar_text_color, Color.WHITE));
+        mSubTitleTextColor = typedArray.getColor(R.styleable.TitleBar_tb_subTitleTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_actionbar_text_color, Color.WHITE));
+        mActionTextColor = typedArray.getColor(R.styleable.TitleBar_tb_actionTextColor, ThemeUtils.resolveColor(getContext(), R.attr.xui_actionbar_text_color, Color.WHITE));
 
-            mLeftImageResource = typedArray.getDrawable(R.styleable.TitleBar_tb_leftImageResource);
-            mLeftTextString = typedArray.getString(R.styleable.TitleBar_tb_leftText);
-            mTitleTextString = typedArray.getString(R.styleable.TitleBar_tb_titleText);
-            mSubTextString = typedArray.getString(R.styleable.TitleBar_tb_subTitleText);
-            mDividerColor = typedArray.getColor(R.styleable.TitleBar_tb_dividerColor, Color.TRANSPARENT);
+        mLeftImageResource = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.TitleBar_tb_leftImageResource);
+        mLeftTextString = typedArray.getString(R.styleable.TitleBar_tb_leftText);
+        mTitleTextString = typedArray.getString(R.styleable.TitleBar_tb_titleText);
+        mSubTextString = typedArray.getString(R.styleable.TitleBar_tb_subTitleText);
+        mDividerColor = typedArray.getColor(R.styleable.TitleBar_tb_dividerColor, Color.TRANSPARENT);
+        mDivideHeight = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_dividerHeight, DensityUtils.dp2px(1));
+        mIsUseThemeColor = typedArray.getBoolean(R.styleable.TitleBar_tb_useThemeColor, true);
 
-            typedArray.recycle();
-        }
+        typedArray.recycle();
     }
 
     private void init(Context context) {
@@ -150,7 +170,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
     private void initView(Context context) {
         mLeftText = new XUIAlphaTextView(context);
-        mCenterLayout = new LinearLayout(context);
+        mCenterLayout = new XUIAlphaLinearLayout(context);
         mRightLayout = new LinearLayout(context);
         mDividerView = new View(context);
 
@@ -160,7 +180,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
         mLeftText.setTextColor(mSideTextColor);
         mLeftText.setText(mLeftTextString);
         if (mLeftImageResource != null) {
-            mLeftText.setCompoundDrawablesWithIntrinsicBounds(mLeftImageResource, null, null, null);
+            mLeftText.setCompoundDrawablesRelativeWithIntrinsicBounds(mLeftImageResource, null, null, null);
         }
         mLeftText.setSingleLine();
 
@@ -170,19 +190,13 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
         mCenterText = new AutoMoveTextView(context);
         mSubTitleText = new TextView(context);
-
         if (!TextUtils.isEmpty(mSubTextString)) {
             mCenterLayout.setOrientation(LinearLayout.VERTICAL);
         }
-        mCenterLayout.addView(mCenterText);
-        mCenterLayout.addView(mSubTitleText);
-        mCenterLayout.setGravity(Gravity.CENTER);
-
         mCenterText.setTextSize(TypedValue.COMPLEX_UNIT_PX, mTitleTextSize);
         mCenterText.setTextColor(mTitleTextColor);
         mCenterText.setText(mTitleTextString);
         mCenterText.setSingleLine();
-        mCenterText.setGravity(Gravity.CENTER);
         mCenterText.setEllipsize(TextUtils.TruncateAt.MARQUEE);
         mCenterText.setTypeface(XUI.getDefaultTypeface());
 
@@ -190,10 +204,19 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
         mSubTitleText.setTextColor(mSubTitleTextColor);
         mSubTitleText.setText(mSubTextString);
         mSubTitleText.setSingleLine();
-        mSubTitleText.setGravity(Gravity.CENTER);
         mSubTitleText.setPadding(0, DensityUtils.dp2px(getContext(), 2), 0, 0);
         mSubTitleText.setEllipsize(TextUtils.TruncateAt.END);
         mSubTitleText.setTypeface(XUI.getDefaultTypeface());
+
+        if (mCenterGravity == CENTER_LEFT) {
+            setCenterGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        } else if (mCenterGravity == CENTER_RIGHT) {
+            setCenterGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        } else {
+            setCenterGravity(Gravity.CENTER);
+        }
+        mCenterLayout.addView(mCenterText);
+        mCenterLayout.addView(mSubTitleText);
 
         mRightLayout.setPadding(mSideTextPadding, 0, mSideTextPadding, 0);
 
@@ -202,7 +225,16 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
         addView(mLeftText, layoutParams);
         addView(mCenterLayout);
         addView(mRightLayout, layoutParams);
-        addView(mDividerView, new LayoutParams(LayoutParams.MATCH_PARENT, 1));
+        addView(mDividerView, new LayoutParams(LayoutParams.MATCH_PARENT, mDivideHeight));
+
+        if (mIsUseThemeColor) {
+            Drawable backgroundDrawable = ThemeUtils.resolveDrawable(getContext(), R.attr.xui_actionbar_background);
+            if (backgroundDrawable != null) {
+                setBackground(backgroundDrawable);
+            } else {
+                setBackgroundColor(ThemeUtils.resolveColor(context, R.attr.xui_actionbar_color));
+            }
+        }
     }
 
     public TitleBar setImmersive(boolean immersive) {
@@ -228,7 +260,49 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     }
 
     public TitleBar setLeftImageResource(int resId) {
-        mLeftText.setCompoundDrawablesWithIntrinsicBounds(resId, 0, 0, 0);
+        if (mLeftText != null) {
+            mLeftText.setCompoundDrawablesRelativeWithIntrinsicBounds(resId, 0, 0, 0);
+        }
+        return this;
+    }
+
+    /**
+     * 设置左侧图标
+     *
+     * @param leftImageDrawable
+     * @return
+     */
+    public TitleBar setLeftImageDrawable(Drawable leftImageDrawable) {
+        mLeftImageResource = leftImageDrawable;
+        if (mLeftText != null) {
+            mLeftText.setCompoundDrawablesRelativeWithIntrinsicBounds(mLeftImageResource, null, null, null);
+        }
+        return this;
+    }
+
+    /**
+     * 设置左侧文字是否加粗
+     *
+     * @param isBold
+     * @return
+     */
+    public TitleBar setLeftTextBold(boolean isBold) {
+        if (mLeftText != null) {
+            mLeftText.getPaint().setFakeBoldText(isBold);
+        }
+        return this;
+    }
+
+    /**
+     * 设置中间文字是否加粗
+     *
+     * @param isBold
+     * @return
+     */
+    public TitleBar setCenterTextBold(boolean isBold) {
+        if (mCenterText != null) {
+            mCenterText.getPaint().setFakeBoldText(isBold);
+        }
         return this;
     }
 
@@ -238,6 +312,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
      * @param resId
      * @return
      */
+    @Deprecated
     public TitleBar setBackImageResource(int resId) {
         if (resId != 0) {
             mLeftImageResource = ResUtils.getDrawable(getContext(), resId);
@@ -328,6 +403,18 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     }
 
     /**
+     * 左侧文字的Padding
+     *
+     * @param paddingStart
+     * @param paddingEnd
+     * @return
+     */
+    public TitleBar setLeftTextPadding(int paddingStart, int paddingEnd) {
+        mLeftText.setPaddingRelative(paddingStart, 0, paddingEnd, 0);
+        return this;
+    }
+
+    /**
      * 左侧文字的颜色
      *
      * @param color
@@ -348,6 +435,19 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
         mLeftText.setVisibility(visible ? View.VISIBLE : View.GONE);
         return this;
     }
+
+    /**
+     * 禁用左侧控件
+     *
+     * @return
+     */
+    public TitleBar disableLeftView() {
+        setBackImageResource(0);
+        setLeftTextPadding(mActionPadding, 0);
+        setLeftVisible(false);
+        return this;
+    }
+
 
     /**
      * 设置标题文字
@@ -391,12 +491,25 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     /**
      * 设置标题和副标题的文字
      *
-     * @param subTitle    副标题
+     * @param subTitle 副标题
      * @return
      */
     public TitleBar setSubTitle(CharSequence subTitle) {
         mSubTitleText.setText(subTitle);
         mSubTitleText.setVisibility(View.VISIBLE);
+        return this;
+    }
+
+    /**
+     * 设置中间内容的对齐方式
+     *
+     * @param gravity
+     * @return
+     */
+    public TitleBar setCenterGravity(int gravity) {
+        mCenterLayout.setGravity(gravity);
+        mCenterText.setGravity(gravity);
+        mSubTitleText.setGravity(gravity);
         return this;
     }
 
@@ -507,7 +620,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     /**
      * Function to set a click listener for Title TextView
      *
-     * @param listener the onClickListener
+     * @param listener the onClick
      */
     public TitleBar setOnTitleClickListener(OnClickListener listener) {
         mCenterText.setOnClickListener(listener);
@@ -612,7 +725,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
     protected View inflateAction(Action action) {
         View view = null;
         if (TextUtils.isEmpty(action.getText())) {
-            ImageView img = new ImageView(getContext());
+            ImageView img = new XUIAlphaImageView(getContext());
             img.setImageResource(action.getDrawable());
             view = img;
         } else {
@@ -620,6 +733,11 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
             text.setGravity(Gravity.CENTER);
             text.setText(action.getText());
             text.setTextSize(TypedValue.COMPLEX_UNIT_PX, mActionTextSize);
+            //字体大于等于16sp自动加粗
+            if (DensityUtils.px2sp(getContext(), mActionTextSize) >= 16) {
+                TextPaint tp = text.getPaint();
+                tp.setFakeBoldText(true);
+            }
             text.setTypeface(XUI.getDefaultTypeface());
             if (mActionTextColor != 0) {
                 text.setTextColor(mActionTextColor);
@@ -627,7 +745,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
             view = text;
         }
 
-        view.setPadding(action.leftPadding() != -1 ? action.leftPadding() : mActionPadding, 0, action.rightPadding() != -1 ? action.rightPadding() : mActionPadding, 0);
+        view.setPaddingRelative(action.leftPadding() != -1 ? action.leftPadding() : mActionPadding, 0, action.rightPadding() != -1 ? action.rightPadding() : mActionPadding, 0);
         view.setTag(action);
         view.setOnClickListener(this);
         return view;
@@ -665,17 +783,33 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        mLeftText.layout(0, mStatusBarHeight, mLeftText.getMeasuredWidth(), mLeftText.getMeasuredHeight() + mStatusBarHeight);
-        mRightLayout.layout(mScreenWidth - mRightLayout.getMeasuredWidth(), mStatusBarHeight,
-                mScreenWidth, mRightLayout.getMeasuredHeight() + mStatusBarHeight);
-        if (mLeftText.getMeasuredWidth() > mRightLayout.getMeasuredWidth()) {
-            mCenterLayout.layout(mLeftText.getMeasuredWidth(), mStatusBarHeight,
-                    mScreenWidth - mLeftText.getMeasuredWidth(), getMeasuredHeight());
+        if (isRtl()) {
+            layoutChildView(mRightLayout, mCenterLayout, mLeftText);
         } else {
-            mCenterLayout.layout(mRightLayout.getMeasuredWidth(), mStatusBarHeight,
-                    mScreenWidth - mRightLayout.getMeasuredWidth(), getMeasuredHeight());
+            layoutChildView(mLeftText, mCenterLayout, mRightLayout);
         }
         mDividerView.layout(0, getMeasuredHeight() - mDividerView.getMeasuredHeight(), getMeasuredWidth(), getMeasuredHeight());
+    }
+
+    private void layoutChildView(View leftView, View centerView, View rightView) {
+        leftView.layout(0, mStatusBarHeight, leftView.getMeasuredWidth(), leftView.getMeasuredHeight() + mStatusBarHeight);
+        rightView.layout(mScreenWidth - rightView.getMeasuredWidth(), mStatusBarHeight,
+                mScreenWidth, rightView.getMeasuredHeight() + mStatusBarHeight);
+        if (mCenterGravity == CENTER_LEFT) {
+            centerView.layout(leftView.getMeasuredWidth(), mStatusBarHeight,
+                    mScreenWidth - leftView.getMeasuredWidth(), getMeasuredHeight());
+        } else if (mCenterGravity == CENTER_RIGHT) {
+            centerView.layout(rightView.getMeasuredWidth(), mStatusBarHeight,
+                    mScreenWidth - rightView.getMeasuredWidth(), getMeasuredHeight());
+        } else {
+            if (leftView.getMeasuredWidth() > rightView.getMeasuredWidth()) {
+                centerView.layout(leftView.getMeasuredWidth(), mStatusBarHeight,
+                        mScreenWidth - leftView.getMeasuredWidth(), getMeasuredHeight());
+            } else {
+                centerView.layout(rightView.getMeasuredWidth(), mStatusBarHeight,
+                        mScreenWidth - rightView.getMeasuredWidth(), getMeasuredHeight());
+            }
+        }
     }
 
     /**
@@ -743,15 +877,15 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
      */
     public static abstract class ImageAction implements Action {
 
-        private int mDrawable;
+        private int mDrawableId;
 
-        public ImageAction(int drawable) {
-            mDrawable = drawable;
+        public ImageAction(@DrawableRes int drawableId) {
+            mDrawableId = drawableId;
         }
 
         @Override
         public int getDrawable() {
-            return mDrawable;
+            return mDrawableId;
         }
 
         @Override
@@ -766,7 +900,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
         @Override
         public int rightPadding() {
-            return -1;
+            return 0;
         }
     }
 
@@ -779,6 +913,10 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
         public TextAction(String text) {
             mText = text;
+        }
+
+        public TextAction(@StringRes int resId) {
+            mText = ResUtils.getString(resId);
         }
 
         @Override
@@ -798,7 +936,7 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
 
         @Override
         public int rightPadding() {
-            return -1;
+            return 0;
         }
     }
 
@@ -807,9 +945,19 @@ public class TitleBar extends ViewGroup implements View.OnClickListener, HasType
      */
     @Override
     public void setTypeface(Typeface tf) {
-        mLeftText.setTypeface(tf);
-        mCenterText.setTypeface(tf);
-        mSubTitleText.setTypeface(tf);
+        if (mLeftText != null) {
+            mLeftText.setTypeface(tf);
+        }
+        if (mCenterText != null) {
+            mCenterText.setTypeface(tf);
+        }
+        if (mSubTitleText != null) {
+            mSubTitleText.setTypeface(tf);
+        }
+    }
+
+    private boolean isRtl() {
+        return getLayoutDirection() == LAYOUT_DIRECTION_RTL;
     }
 
     public XUIAlphaTextView getLeftText() {

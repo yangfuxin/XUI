@@ -2,31 +2,33 @@ package com.xuexiang.xuidemo;
 
 import android.app.Application;
 import android.content.Context;
-import android.support.multidex.MultiDex;
 
-import com.xuexiang.xaop.XAOP;
-import com.xuexiang.xaop.util.PermissionUtils;
-import com.xuexiang.xpage.AppPageConfig;
-import com.xuexiang.xpage.PageConfig;
-import com.xuexiang.xpage.PageConfiguration;
-import com.xuexiang.xpage.model.PageInfo;
+import androidx.multidex.MultiDex;
+
+import com.google.android.cameraview.CameraView;
+import com.luck.picture.lib.tools.PictureFileUtils;
+import com.mikepenz.iconics.Iconics;
+import com.xuexiang.xormlite.annotation.DataBase;
+import com.xuexiang.xormlite.enums.DataBaseType;
 import com.xuexiang.xui.XUI;
-import com.xuexiang.xuidemo.utils.LocationService;
-import com.xuexiang.xuidemo.utils.update.OKHttpUpdateHttpService;
-import com.xuexiang.xupdate.XUpdate;
-import com.xuexiang.xupdate.utils.UpdateUtils;
-import com.xuexiang.xutil.XUtil;
-import com.xuexiang.xutil.app.PathUtils;
-import com.xuexiang.xutil.common.StringUtils;
-import com.xuexiang.xutil.tip.ToastUtils;
-import com.xuexiang.xvideo.XVideo;
+import com.xuexiang.xuidemo.utils.SettingSPUtils;
+import com.xuexiang.xuidemo.utils.sdkinit.ANRWatchDogInit;
+import com.xuexiang.xuidemo.utils.sdkinit.AutoCameraStrategy;
+import com.xuexiang.xuidemo.utils.sdkinit.BuglyInit;
+import com.xuexiang.xuidemo.utils.sdkinit.TbsInit;
+import com.xuexiang.xuidemo.utils.sdkinit.UMengInit;
+import com.xuexiang.xuidemo.utils.sdkinit.XBasicLibInit;
+import com.xuexiang.xuidemo.utils.sdkinit.XUpdateInit;
+import com.xuexiang.xuidemo.widget.iconfont.XUIIconFont;
 
-import java.util.List;
 
 /**
+ * 应用初始化
+ *
  * @author xuexiang
  * @since 2018/11/7 下午1:12
  */
+@DataBase(name = "XUI", type = DataBaseType.INTERNAL)
 public class MyApp extends Application {
 
     @Override
@@ -39,82 +41,45 @@ public class MyApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        initLibs();
-
+        //初始化基础库
+        XBasicLibInit.init(this);
         initUI();
-
-        initUpdate();
+        //三方SDK初始化
+        XUpdateInit.init(this);
+        TbsInit.init(this);
+        //运营统计数据运行时不初始化
+        if (!MyApp.isDebug()) {
+            UMengInit.init(this);
+            BuglyInit.init(this);
+        }
+        //ANR监控
+        ANRWatchDogInit.init();
     }
 
+    /**
+     * 初始化XUI 框架
+     */
     private void initUI() {
         XUI.init(this);
-        XUI.debug(BuildConfig.DEBUG);
-//        //设置默认字体为华文行楷
-//        XUI.getInstance().initFontStyle("fonts/hwxk.ttf");
+        XUI.debug(MyApp.isDebug());
+        if (SettingSPUtils.getInstance().isUseCustomFont()) {
+            //设置默认字体为华文行楷
+            XUI.initFontStyle("fonts/hwxk.ttf");
+        }
+        PictureFileUtils.setAppName("xui");
+
+        //字体图标库
+        Iconics.init(this);
+        //这是自己定义的图标库
+        Iconics.registerFont(new XUIIconFont());
+
+        CameraView.setICameraStrategy(new AutoCameraStrategy(1920 * 1080));
     }
 
 
-    /**
-     * 初始化基础库
-     */
-    private void initLibs() {
-        XUtil.init(this);
-        XUtil.debug(BuildConfig.DEBUG);
-        //百度定位
-        LocationService.get().init(this);
-
-        //自动注册页面
-        PageConfig.getInstance()
-                .setPageConfiguration(new PageConfiguration() {
-                    @Override
-                    public List<PageInfo> registerPages(Context context) {
-                        return AppPageConfig.getInstance().getPages();
-                    }
-                })
-                .debug("PageLog")
-                .enableWatcher(false)
-                .init(this);
-
-        //初始化插件
-        XAOP.init(this);
-        //日志打印切片开启
-        XAOP.debug(BuildConfig.DEBUG);
-        //设置动态申请权限切片 申请权限被拒绝的事件响应监听
-        XAOP.setOnPermissionDeniedListener(new PermissionUtils.OnPermissionDeniedListener() {
-            @Override
-            public void onDenied(List<String> permissionsDenied) {
-                ToastUtils.toast("权限申请被拒绝:" + StringUtils.listToString(permissionsDenied, ","));
-            }
-
-        });
+    public static boolean isDebug() {
+        return BuildConfig.DEBUG;
     }
 
 
-    /**
-     * 初始化video的存放路径
-     */
-    public static void initVideo() {
-        XVideo.setVideoCachePath(PathUtils.getExtDcimPath() + "/xvideo/");
-        // 初始化拍摄
-        XVideo.initialize(false, null);
-    }
-
-    private void initUpdate() {
-        XUpdate.get()
-                .debug(BuildConfig.DEBUG)
-                //默认设置只在wifi下检查版本更新
-                .isWifiOnly(false)
-                //默认设置使用get请求检查版本
-                .isGet(true)
-                //默认设置非自动模式，可根据具体使用配置
-                .isAutoMode(false)
-                //设置默认公共请求参数
-                .param("versionCode", UpdateUtils.getVersionCode(this))
-                .param("appKey", getPackageName())
-                //这个必须设置！实现网络请求功能。
-                .setIUpdateHttpService(new OKHttpUpdateHttpService())
-                //这个必须初始化
-                .init(this);
-    }
 }

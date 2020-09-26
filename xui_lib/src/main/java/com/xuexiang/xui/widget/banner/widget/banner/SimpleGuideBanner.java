@@ -6,11 +6,9 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.xuexiang.xui.R;
 import com.xuexiang.xui.widget.banner.widget.banner.base.BaseIndicatorBanner;
-import com.xuexiang.xui.widget.banner.widget.banner.base.GlideImageLoader;
-import com.xuexiang.xui.widget.banner.widget.banner.base.ImageLoader;
+import com.xuexiang.xui.widget.imageview.ImageLoader;
 
 /**
  * 简单的引导页
@@ -18,9 +16,7 @@ import com.xuexiang.xui.widget.banner.widget.banner.base.ImageLoader;
  * @author xuexiang
  * @since 2018/12/6 下午4:32
  */
-public class SimpleGuideBanner extends BaseIndicatorBanner<Integer, SimpleGuideBanner> {
-
-    private ImageLoader mImageLoader;
+public class SimpleGuideBanner extends BaseIndicatorBanner<Object, SimpleGuideBanner> {
 
     public SimpleGuideBanner(Context context) {
         super(context);
@@ -43,38 +39,46 @@ public class SimpleGuideBanner extends BaseIndicatorBanner<Integer, SimpleGuideB
         setAutoScrollEnable(false);
     }
 
-    private ImageLoader getImageLoader() {
-        if (mImageLoader == null) {
-            mImageLoader = new GlideImageLoader();
-        }
-        return  mImageLoader;
-    }
-
     @Override
     public View onCreateItemView(int position) {
         View inflate = View.inflate(mContext, R.layout.xui_adapter_simple_guide, null);
         ImageView iv = inflate.findViewById(R.id.iv);
-        TextView tv_jump = inflate.findViewById(R.id.tv_jump);
+        TextView tvJump = inflate.findViewById(R.id.tv_jump);
+        TextView tvStart = inflate.findViewById(R.id.tv_start);
 
-        final Integer resId = mDatas.get(position);
-        tv_jump.setVisibility(position == mDatas.size() - 1 ? VISIBLE : GONE);
+        final Object resId = mDatas.get(position);
+        tvJump.setVisibility(position == 0 ? VISIBLE : GONE);
+        tvStart.setVisibility(position == mDatas.size() - 1 ? VISIBLE : GONE);
+        ImageLoader.get().loadImage(iv, resId);
 
-        getImageLoader().displayImage(mContext, resId, iv);
-
-        tv_jump.setOnClickListener(new View.OnClickListener() {
+        tvJump.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (onJumpClickListener != null)
+                if (onJumpClickListener != null) {
                     onJumpClickListener.onJumpClick();
+                }
             }
         });
-
+        tvStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onJumpClickListener != null) {
+                    onJumpClickListener.onJumpClick();
+                }
+            }
+        });
         return inflate;
     }
 
     private OnJumpClickListener onJumpClickListener;
 
+    /**
+     * 点击跳过或者立即体验的监听
+     */
     public interface OnJumpClickListener {
+        /**
+         * 跳过监听
+         */
         void onJumpClick();
     }
 
@@ -82,8 +86,4 @@ public class SimpleGuideBanner extends BaseIndicatorBanner<Integer, SimpleGuideB
         this.onJumpClickListener = onJumpClickListener;
     }
 
-    public SimpleGuideBanner setImageLoader(ImageLoader imageLoader) {
-        mImageLoader = imageLoader;
-        return this;
-    }
 }

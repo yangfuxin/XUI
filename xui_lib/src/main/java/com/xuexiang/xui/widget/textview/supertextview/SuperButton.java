@@ -5,11 +5,14 @@ import android.content.res.TypedArray;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
-import android.support.v7.widget.AppCompatButton;
 import android.util.AttributeSet;
 import android.view.Gravity;
 
+import androidx.appcompat.widget.AppCompatButton;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.widget.alpha.IAlphaViewHelper;
+import com.xuexiang.xui.widget.alpha.XUIAlphaViewHelper;
 
 /**
  * 超级按钮  实现shape所有的属性
@@ -99,7 +102,6 @@ public class SuperButton extends AppCompatButton {
     private int gravity;
 
     private GradientDrawable gradientDrawable;
-
 
     public SuperButton(Context context) {
         super(context);
@@ -228,10 +230,10 @@ public class SuperButton extends AppCompatButton {
                 setGravity(Gravity.CENTER);
                 break;
             case 1:
-                setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
+                setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
                 break;
             case 2:
-                setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+                setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
                 break;
             case 3:
                 setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
@@ -269,7 +271,7 @@ public class SuperButton extends AppCompatButton {
      * 如果设定的有Orientation 就默认为是渐变色的Button，否则就是纯色的Button
      */
     private void setOrientation() {
-        if (gradientOrientation != -1) {
+        if (isUseGradientColor()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 gradientDrawable.setOrientation(getOrientation(gradientOrientation));
 
@@ -720,6 +722,66 @@ public class SuperButton extends AppCompatButton {
     private int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
+    }
+
+    private IAlphaViewHelper mAlphaViewHelper;
+
+    private IAlphaViewHelper getAlphaViewHelper() {
+        if (mAlphaViewHelper == null) {
+            mAlphaViewHelper = new XUIAlphaViewHelper(this);
+        }
+        return mAlphaViewHelper;
+    }
+
+    @Override
+    public void setPressed(boolean pressed) {
+        super.setPressed(pressed);
+        if (isEnableChangeAlpha()) {
+            getAlphaViewHelper().onPressedChanged(this, pressed);
+        }
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+        if (isEnableChangeAlpha()) {
+            getAlphaViewHelper().onEnabledChanged(this, enabled);
+        }
+    }
+
+    private boolean isEnableChangeAlpha() {
+        return isUseGradientColor() || selectorNormalColor == selectorPressedColor;
+    }
+
+    /**
+     * 是否使用渐变色
+     *
+     * @return
+     */
+    private boolean isUseGradientColor() {
+        return gradientOrientation != -1;
+    }
+
+    /**
+     * 设置是否要在 press 时改变透明度
+     *
+     * @param changeAlphaWhenPress 是否要在 press 时改变透明度
+     */
+    public void setChangeAlphaWhenPress(boolean changeAlphaWhenPress) {
+        if (isEnableChangeAlpha()) {
+            getAlphaViewHelper().setChangeAlphaWhenPress(changeAlphaWhenPress);
+        }
+    }
+
+    /**
+     * 设置是否要在 disabled 时改变透明度
+     *
+     * @param changeAlphaWhenDisable 是否要在 disabled 时改变透明度
+     */
+    public void setChangeAlphaWhenDisable(boolean changeAlphaWhenDisable) {
+        if (isEnableChangeAlpha()) {
+            getAlphaViewHelper().setChangeAlphaWhenDisable(changeAlphaWhenDisable);
+        }
     }
 
 }

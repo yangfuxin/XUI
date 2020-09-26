@@ -3,8 +3,8 @@ package com.xuexiang.xui.widget.spinner.materialspinner;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DrawableRes;
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,7 +39,7 @@ public abstract class MaterialSpinnerBaseAdapter<T> extends BaseAdapter {
         final TextView textView;
         if (convertView == null) {
             LayoutInflater inflater = LayoutInflater.from(context);
-            convertView = inflater.inflate(R.layout.ms_list_item, parent, false);
+            convertView = inflater.inflate(R.layout.ms_layout_list_item, parent, false);
             textView = convertView.findViewById(R.id.tv_tinted_spinner);
             textView.setTextColor(textColor);
             textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);

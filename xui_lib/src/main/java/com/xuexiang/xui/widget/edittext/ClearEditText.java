@@ -3,7 +3,7 @@ package com.xuexiang.xui.widget.edittext;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.support.v7.widget.AppCompatEditText;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -14,7 +14,10 @@ import android.view.animation.Animation;
 import android.view.animation.CycleInterpolator;
 import android.view.animation.TranslateAnimation;
 
+import androidx.appcompat.widget.AppCompatEditText;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.utils.ResUtils;
 
 /**
@@ -23,28 +26,33 @@ import com.xuexiang.xui.utils.ResUtils;
  * @author xuexiang
  * @since 2019/1/14 下午10:06
  */
-public class ClearEditText extends AppCompatEditText implements
-        OnFocusChangeListener, TextWatcher {
+public class ClearEditText extends AppCompatEditText implements OnFocusChangeListener, TextWatcher {
+
+    /**
+     * 增大点击区域
+     */
+    private int mExtraClickArea;
     /**
      * 删除按钮的引用
      */
     private Drawable mClearDrawable;
-    private int mIconSize;
 
     public ClearEditText(Context context) {
-        super(context);
-        initAttrs(context, null);
+        this(context, null);
     }
 
     public ClearEditText(Context context, AttributeSet attrs) {
-        //这里构造方法也很重要，不加这个很多属性不能再XML里面定义
-        super(context, attrs, android.R.attr.editTextStyle);
-        initAttrs(context, attrs);
+        this(context, attrs, R.attr.ClearEditTextStyle);
     }
 
     public ClearEditText(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initAttrs(context, attrs);
+        initAttrs(context, attrs, defStyle);
+    }
+
+    public ClearEditText setExtraClickAreaSize(int extraClickArea) {
+        mExtraClickArea = extraClickArea;
+        return this;
     }
 
     /**
@@ -60,25 +68,23 @@ public class ClearEditText extends AppCompatEditText implements
         return translateAnimation;
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        if (isInEditMode()) {
-            return;
-        }
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ClearEditText);
-        if (typedArray != null) {
-            mClearDrawable = typedArray.getDrawable(R.styleable.ClearEditText_cet_clearIcon);
-            mIconSize = typedArray.getDimensionPixelSize(R.styleable.ClearEditText_cet_clearIconSize, 0);
-            typedArray.recycle();
-        }
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        mExtraClickArea = DensityUtils.dp2px(20);
+
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ClearEditText, defStyleAttr, 0);
+        mClearDrawable = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.ClearEditText_cet_clearIcon);
+        int iconSize = typedArray.getDimensionPixelSize(R.styleable.ClearEditText_cet_clearIconSize, 0);
+        typedArray.recycle();
+
         if (mClearDrawable == null) {
             //获取EditText的DrawableRight,假如没有设置我们就使用默认的图片
-            mClearDrawable = getCompoundDrawables()[2];
+            mClearDrawable = getCompoundDrawablesRelative()[2];
             if (mClearDrawable == null) {
-                mClearDrawable = ResUtils.getDrawable(R.drawable.xui_ic_default_clear_btn);
+                mClearDrawable = ResUtils.getVectorDrawable(context, R.drawable.xui_ic_default_clear_btn);
             }
         }
-        if (mIconSize != 0) {
-            mClearDrawable.setBounds(0, 0, mIconSize, mIconSize);
+        if (iconSize != 0) {
+            mClearDrawable.setBounds(0, 0, iconSize, iconSize);
         } else {
             mClearDrawable.setBounds(0, 0, mClearDrawable.getIntrinsicWidth(), mClearDrawable.getIntrinsicHeight());
         }
@@ -94,11 +100,9 @@ public class ClearEditText extends AppCompatEditText implements
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (getCompoundDrawables()[2] != null) {
+        if (getCompoundDrawablesRelative()[2] != null) {
             if (event.getAction() == MotionEvent.ACTION_UP) {
-                boolean touchable = event.getX() > (getWidth()
-                        - getPaddingRight() - mClearDrawable.getIntrinsicWidth())
-                        && (event.getX() < ((getWidth() - getPaddingRight())));
+                boolean touchable = isTouchable(event);
                 if (touchable) {
                     this.setText("");
                 }
@@ -108,13 +112,22 @@ public class ClearEditText extends AppCompatEditText implements
         return super.onTouchEvent(event);
     }
 
+    private boolean isTouchable(MotionEvent event) {
+        if (isRtl()) {
+            return event.getX() > getPaddingLeft() - mExtraClickArea && event.getX() < getPaddingLeft() + mClearDrawable.getIntrinsicWidth() + mExtraClickArea;
+        } else {
+            return event.getX() > getWidth() - getPaddingRight() - mClearDrawable.getIntrinsicWidth() - mExtraClickArea && event.getX() < getWidth() - getPaddingRight() + mExtraClickArea;
+        }
+    }
+
     /**
      * 当ClearEditText焦点发生变化的时候，判断里面字符串长度设置清除图标的显示与隐藏
      */
     @Override
     public void onFocusChange(View v, boolean hasFocus) {
         if (hasFocus) {
-            setClearIconVisible(getText().length() > 0);
+            int length = getText() != null ? getText().length() : 0;
+            setClearIconVisible(length > 0);
         } else {
             setClearIconVisible(false);
         }
@@ -126,9 +139,8 @@ public class ClearEditText extends AppCompatEditText implements
      * @param visible
      */
     protected void setClearIconVisible(boolean visible) {
-        Drawable right = visible ? mClearDrawable : null;
-        setCompoundDrawables(getCompoundDrawables()[0],
-                getCompoundDrawables()[1], right, getCompoundDrawables()[3]);
+        Drawable end = visible ? mClearDrawable : null;
+        setCompoundDrawablesRelative(getCompoundDrawablesRelative()[0], getCompoundDrawablesRelative()[1], end, getCompoundDrawablesRelative()[3]);
     }
 
     /**
@@ -164,5 +176,8 @@ public class ClearEditText extends AppCompatEditText implements
         this.setAnimation(shakeAnimation(5));
     }
 
+    private boolean isRtl() {
+        return getLayoutDirection() == LAYOUT_DIRECTION_RTL;
+    }
 
 }

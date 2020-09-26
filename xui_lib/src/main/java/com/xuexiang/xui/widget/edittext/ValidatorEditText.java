@@ -3,7 +3,6 @@ package com.xuexiang.xui.widget.edittext;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -11,8 +10,12 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.appcompat.widget.AppCompatEditText;
+
 import com.xuexiang.xui.R;
+import com.xuexiang.xui.utils.DensityUtils;
 import com.xuexiang.xui.utils.ResUtils;
+import com.xuexiang.xui.utils.ThemeUtils;
 import com.xuexiang.xui.widget.edittext.materialedittext.validation.METValidator;
 import com.xuexiang.xui.widget.edittext.materialedittext.validation.RegexpValidator;
 import com.xuexiang.xui.widget.popupwindow.ViewTooltip;
@@ -46,7 +49,6 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
     private boolean mIsValid = true;
 
     private Drawable mErrorDrawable;
-    private int mIconSize;
 
     /**
      * 出错提示
@@ -60,60 +62,57 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
      */
     private boolean mIsShowErrorIcon = true;
 
+    /**
+     * 增大点击区域
+     */
+    private int mExtraClickArea;
+
     public ValidatorEditText(Context context) {
-        super(context);
-        initAttrs(context, null);
-        initView();
+        this(context, null);
     }
 
     public ValidatorEditText(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        initAttrs(context, attrs);
-        initView();
+        this(context, attrs, R.attr.ValidatorEditTextStyle);
     }
 
     public ValidatorEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        initAttrs(context, attrs);
+        initAttrs(context, attrs, defStyleAttr);
         initView();
     }
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        if (attrs != null) {
-            TypedArray tArray = context.obtainStyledAttributes(attrs, R.styleable.ValidatorEditText);
-            try {
-                String regexp = tArray.getString(R.styleable.ValidatorEditText_vet_regexp);
-                if (!TextUtils.isEmpty(regexp)) {
-                    mValidators = new ArrayList<>();
-                    String errorMessage = tArray.getString(R.styleable.ValidatorEditText_vet_errorMessage);
-                    if (!TextUtils.isEmpty(errorMessage)) {
-                        mValidators.add(new RegexpValidator(errorMessage, regexp));
-                    } else {
-                        mValidators.add(new RegexpValidator(ResUtils.getString(R.string.xui_tip_input_error), regexp));
-                    }
-                }
-                mIsAutoValidate = tArray.getBoolean(R.styleable.ValidatorEditText_vet_autoValidate, true);
-                mIsShowErrorIcon = tArray.getBoolean(R.styleable.ValidatorEditText_vet_show_errorIcon, true);
-                mErrorDrawable = tArray.getDrawable(R.styleable.ValidatorEditText_vet_errorIcon);
-                if (mErrorDrawable == null) {
-                    //获取EditText的DrawableRight,假如没有设置我们就使用默认的图片
-                    mErrorDrawable = getCompoundDrawables()[2];
-                    if (mErrorDrawable == null) {
-                        mErrorDrawable = ResUtils.getDrawable(R.drawable.xui_ic_default_tip_btn);
-                    }
-                }
-                mIconSize = tArray.getDimensionPixelSize(R.styleable.ValidatorEditText_vet_errorIconSize, 0);
-                if (mIconSize != 0) {
-                    mErrorDrawable.setBounds(0, 0, mIconSize, mIconSize);
-                } else {
-                    mErrorDrawable.setBounds(0, 0, mErrorDrawable.getIntrinsicWidth(), mErrorDrawable.getIntrinsicHeight());
-                }
-                mPosition = tArray.getInt(R.styleable.ValidatorEditText_vet_tipPosition, 2);
+    private void initAttrs(Context context, AttributeSet attrs, int defStyleAttr) {
+        mExtraClickArea = DensityUtils.dp2px(20);
 
-            } finally {
-                tArray.recycle();
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.ValidatorEditText, defStyleAttr, 0);
+        String regexp = typedArray.getString(R.styleable.ValidatorEditText_vet_regexp);
+        if (!TextUtils.isEmpty(regexp)) {
+            mValidators = new ArrayList<>();
+            String errorMessage = typedArray.getString(R.styleable.ValidatorEditText_vet_errorMessage);
+            if (!TextUtils.isEmpty(errorMessage)) {
+                mValidators.add(new RegexpValidator(errorMessage, regexp));
+            } else {
+                mValidators.add(new RegexpValidator(ResUtils.getString(R.string.xui_met_input_error), regexp));
             }
         }
+        mIsAutoValidate = typedArray.getBoolean(R.styleable.ValidatorEditText_vet_autoValidate, true);
+        mIsShowErrorIcon = typedArray.getBoolean(R.styleable.ValidatorEditText_vet_showErrorIcon, true);
+        mErrorDrawable = ResUtils.getDrawableAttrRes(getContext(), typedArray, R.styleable.ValidatorEditText_vet_errorIcon);
+        if (mErrorDrawable == null) {
+            //获取EditText的DrawableRight,假如没有设置我们就使用默认的图片
+            mErrorDrawable = getCompoundDrawablesRelative()[2];
+            if (mErrorDrawable == null) {
+                mErrorDrawable = ResUtils.getDrawable(getContext(), R.drawable.xui_ic_default_tip_btn);
+            }
+        }
+        int iconSize = typedArray.getDimensionPixelSize(R.styleable.ValidatorEditText_vet_errorIconSize, 0);
+        if (iconSize != 0) {
+            mErrorDrawable.setBounds(0, 0, iconSize, iconSize);
+        } else {
+            mErrorDrawable.setBounds(0, 0, mErrorDrawable.getIntrinsicWidth(), mErrorDrawable.getIntrinsicHeight());
+        }
+        mPosition = typedArray.getInt(R.styleable.ValidatorEditText_vet_tipPosition, 2);
+        typedArray.recycle();
     }
 
     private void initView() {
@@ -154,17 +153,27 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (getCompoundDrawables()[2] != null) {
+        if (getCompoundDrawablesRelative()[2] != null) {
             if (event.getAction() == MotionEvent.ACTION_UP) {
-                boolean touchable = event.getX() > (getWidth()
-                        - getPaddingRight() - mErrorDrawable.getIntrinsicWidth())
-                        && (event.getX() < ((getWidth() - getPaddingRight())));
-                if (touchable) {
+                if (isTouchable(event)) {
                     showErrorMsg();
                 }
             }
         }
         return super.onTouchEvent(event);
+    }
+
+    public ValidatorEditText setExtraClickAreaSize(int extraClickArea) {
+        mExtraClickArea = extraClickArea;
+        return this;
+    }
+
+    private boolean isTouchable(MotionEvent event) {
+        if (isRtl()) {
+            return event.getX() > getPaddingStart() - mExtraClickArea && event.getX() < getPaddingStart() + mErrorDrawable.getIntrinsicWidth() + mExtraClickArea;
+        } else {
+            return event.getX() > getWidth() - getPaddingEnd() - mErrorDrawable.getIntrinsicWidth() - mExtraClickArea && event.getX() < getWidth() - getPaddingEnd() + mExtraClickArea;
+        }
     }
 
     /**
@@ -174,7 +183,7 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
         if (!mIsValid) {
             ViewTooltip
                     .on(this)
-                    .color(ResUtils.getColor(R.color.xui_config_color_edittext_error_text))
+                    .color(ThemeUtils.resolveColor(getContext(), R.attr.xui_config_color_error_text))
                     .position(parsePosition(mPosition))
                     .text(mErrorMsg.toString())
                     .show();
@@ -228,11 +237,11 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
         }
 
         CharSequence text = getText();
-        boolean isEmpty = text.length() == 0;
+        boolean isEmpty = TextUtils.isEmpty(text);
 
         boolean isValid = true;
         for (METValidator validator : mValidators) {
-            isValid = isValid && validator.isValid(text, isEmpty);
+            isValid = validator.isValid(text, isEmpty);
             if (!isValid) {
                 setError(validator.getErrorMessage());
                 break;
@@ -256,6 +265,7 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
 
     /**
      * 输入的内容是否有效
+     *
      * @return
      */
     public boolean isInputValid() {
@@ -268,7 +278,6 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
 
     @Override
     public void setError(CharSequence error) {
-//        super.setError(error);
         mErrorMsg = error;
         if (TextUtils.isEmpty(error)) {
             setErrorIconVisible(false);
@@ -285,6 +294,7 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
 
     /**
      * 获取输入的内容
+     *
      * @return
      */
     public String getInputValue() {
@@ -299,7 +309,7 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
     private void onValidateError(String errorMessage) {
         setErrorIconVisible(true);
         if (mOnValidateListener != null) {
-            mOnValidateListener.onValidateError(getText().toString(), errorMessage);
+            mOnValidateListener.onValidateError(getText() != null ? getText().toString() : "", errorMessage);
         }
     }
 
@@ -316,18 +326,23 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
      * @param visible
      */
     private void setErrorIconVisible(boolean visible) {
-        Drawable right = visible && mIsShowErrorIcon ? mErrorDrawable : null;
-        setCompoundDrawables(getCompoundDrawables()[0],
-                getCompoundDrawables()[1], right, getCompoundDrawables()[3]);
+        Drawable end = visible && mIsShowErrorIcon ? mErrorDrawable : null;
+        setCompoundDrawablesRelative(getCompoundDrawablesRelative()[0],
+                getCompoundDrawablesRelative()[1], end, getCompoundDrawablesRelative()[3]);
     }
 
     public static ViewTooltip.Position parsePosition(int value) {
         switch (value) {
-            case 0: return ViewTooltip.Position.LEFT;
-            case 1: return ViewTooltip.Position.RIGHT;
-            case 2: return ViewTooltip.Position.TOP;
-            case 3: return ViewTooltip.Position.BOTTOM;
-            default: return ViewTooltip.Position.TOP;
+            case 0:
+                return ViewTooltip.Position.LEFT;
+            case 1:
+                return ViewTooltip.Position.RIGHT;
+            case 2:
+                return ViewTooltip.Position.TOP;
+            case 3:
+                return ViewTooltip.Position.BOTTOM;
+            default:
+                return ViewTooltip.Position.TOP;
         }
     }
 
@@ -364,10 +379,14 @@ public class ValidatorEditText extends AppCompatEditText implements View.OnFocus
         /**
          * 校验出错
          *
-         * @param inputString
-         * @param errorMessage
+         * @param inputString  输入内容
+         * @param errorMessage 错误信息
          */
         void onValidateError(String inputString, String errorMessage);
 
+    }
+
+    private boolean isRtl() {
+        return getLayoutDirection() == LAYOUT_DIRECTION_RTL;
     }
 }

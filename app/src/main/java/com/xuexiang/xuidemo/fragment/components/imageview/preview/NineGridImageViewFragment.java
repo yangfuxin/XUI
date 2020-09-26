@@ -16,29 +16,30 @@
 
 package com.xuexiang.xuidemo.fragment.components.imageview.preview;
 
-import android.support.annotation.NonNull;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshLoadMoreListener;
 import com.xuexiang.xaop.annotation.SingleClick;
 import com.xuexiang.xpage.annotation.Page;
+import com.xuexiang.xui.adapter.recyclerview.XLinearLayoutManager;
 import com.xuexiang.xui.widget.actionbar.TitleBar;
 import com.xuexiang.xuidemo.DemoDataProvider;
 import com.xuexiang.xuidemo.R;
 import com.xuexiang.xuidemo.adapter.NineGridRecycleAdapter;
 import com.xuexiang.xuidemo.base.BaseFragment;
-import com.xuexiang.xutil.tip.ToastUtils;
+import com.xuexiang.xuidemo.utils.XToastUtils;
 
 import java.util.List;
 
 import butterknife.BindView;
 
-import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
+import static androidx.recyclerview.widget.RecyclerView.VERTICAL;
 
 /**
  * @author xuexiang
@@ -91,7 +92,7 @@ public class NineGridImageViewFragment extends BaseFragment {
      */
     @Override
     protected void initViews() {
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        mRecyclerView.setLayoutManager(new XLinearLayoutManager(getContext()));
         mRecyclerView.addItemDecoration(new DividerItemDecoration(getContext(), VERTICAL));
         mRecyclerView.setAdapter(mAdapter = new NineGridRecycleAdapter());
         mRefreshLayout.autoRefresh();//第一次进入触发自动刷新，演示效果
@@ -101,31 +102,25 @@ public class NineGridImageViewFragment extends BaseFragment {
     protected void initListeners() {
         mRefreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
-            public void onLoadMore(@NonNull RefreshLayout refreshLayout) {
-                mRefreshLayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPage++;
-                        if (mPage < getMediaRes().size()) {
-                            mAdapter.loadMore(getMediaRes().get(mPage));
-                            mRefreshLayout.finishLoadMore();
-                        } else {
-                            ToastUtils.toast("数据全部加载完毕");
-                            mRefreshLayout.finishLoadMoreWithNoMoreData();//将不会再次触发加载更多事件
-                        }
+            public void onLoadMore(final @NonNull RefreshLayout refreshLayout) {
+                refreshLayout.getLayout().postDelayed(() -> {
+                    mPage++;
+                    if (mPage < getMediaRes().size()) {
+                        mAdapter.loadMore(getMediaRes().get(mPage));
+                        refreshLayout.finishLoadMore();
+                    } else {
+                        XToastUtils.toast("数据全部加载完毕");
+                        refreshLayout.finishLoadMoreWithNoMoreData();//将不会再次触发加载更多事件
                     }
                 }, 1000);
             }
 
             @Override
-            public void onRefresh(@NonNull RefreshLayout refreshLayout) {
-                mRefreshLayout.getLayout().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPage = 0;
-                        mAdapter.refresh(getMediaRes().get(mPage));
-                        mRefreshLayout.finishRefresh();
-                    }
+            public void onRefresh(final @NonNull RefreshLayout refreshLayout) {
+                refreshLayout.getLayout().postDelayed(() -> {
+                    mPage = 0;
+                    mAdapter.refresh(getMediaRes().get(mPage));
+                    refreshLayout.finishRefresh();
                 }, 1000);
 
             }

@@ -19,7 +19,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -68,8 +68,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
-                android:paddingLeft="32dp"
-                android:paddingRight="32dp"
+                android:paddingStart="32dp"
+                android:paddingEnd="32dp"
                 android:text="默认主题"
                 android:textSize="16sp" />
 
@@ -78,13 +78,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="24dp"
-                android:background="@color/colorPrimary"
+                android:background="?attr/colorPrimary"
                 android:text="选择城市"
                 android:textColor="@android:color/white"
                 android:textSize="16sp" />
         </LinearLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 
 </LinearLayout>

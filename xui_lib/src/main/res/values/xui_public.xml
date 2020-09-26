@@ -8,7 +8,9 @@
     <public name="xui_tip_empty_message" type="string" />
     <public name="xui_tip_no_network" type="string" />
     <public name="xui_tip_retry" type="string" />
-
+    <public name="xui_float_behavior" type="string" />
+    <public name="xui_bottom_behavior" type="string" />
+    <public name="xui_title_behavior" type="string" />
 
     <!--dimen-->
     <public name="xui_list_divider_height_table" type="dimen" />
@@ -85,10 +87,11 @@
     <public name="xui_config_color_light_blue_gray" type="color" />
     <public name="xui_config_color_light_blue" type="color" />
 
-    <public name="xui_config_color_title_content_text" type="color" />
-    <public name="xui_config_color_sub_title_common_explain_text" type="color" />
-    <public name="xui_config_color_assist_explain_text" type="color" />
-    <public name="xui_config_color_major_prompt_message_text" type="color" />
+    <public name="xui_config_color_title_text" type="color" />
+    <public name="xui_config_color_content_text" type="color" />
+    <public name="xui_config_color_explain_text" type="color" />
+    <public name="xui_config_color_primary_text" type="color" />
+    <public name="xui_config_color_control_normal" type="color" />
 
     <public name="xui_config_color_background_tablet" type="color" />
     <public name="xui_config_color_background_phone" type="color" />
@@ -121,6 +124,8 @@
     <public name="Button.Style" type="style" />
     <public name="Button.Blue" type="style" />
     <public name="Button.Blue.wrap" type="style" />
+    <public name="Button.Primary" type="style" />
+    <public name="Button.Primary.wrap" type="style" />
     <public name="Button.Radius" type="style" />
     <public name="ButtonStyle" type="style" />
     <public name="ButtonView" type="style" />
@@ -157,13 +162,12 @@
     <public name="XUIDialog" type="style" />
     <public name="XUIDialog.Custom" type="style" />
 
-
     <!--layout-->
     <public name="xui_include_titlebar" type="layout" />
-    <public name="msv_empty_view" type="layout" />
-    <public name="msv_error_view" type="layout" />
-    <public name="msv_loading_view" type="layout" />
-    <public name="msv_no_network_view" type="layout" />
+    <public name="msv_layout_empty_view" type="layout" />
+    <public name="msv_layout_error_view" type="layout" />
+    <public name="msv_layout_loading_view" type="layout" />
+    <public name="msv_layout_no_network_view" type="layout" />
 
     <!--attr-->
     <public name="xui_config_content_spacing_horizontal" type="attr" />
@@ -173,19 +177,30 @@
     <public name="xui_config_separator_height" type="attr" />
     <public name="xui_config_divider_height" type="attr" />
 
+    <public name="xui_config_color_splash_bg" type="attr" />
+    <public name="xui_config_splash_app_logo" type="attr" />
+    <public name="xui_config_app_logo_bottom" type="attr" />
+    <public name="xui_config_splash_company_logo" type="attr" />
+    <public name="xui_config_company_logo_bottom" type="attr" />
+
     <public name="xui_actionbar_color" type="attr" />
+    <public name="xui_actionbar_background" type="attr" />
+    <public name="xui_actionbar_text_color" type="attr" />
+    <public name="xui_actionbar_immersive" type="attr" />
+    <public name="xui_actionbar_ic_navigation_back" type="attr" />
     <public name="xui_actionbar_height" type="attr" />
     <public name="xui_actionbar_title_text_size" type="attr" />
-    <public name="xui_actionbar_action_text_size" type="attr" />
     <public name="xui_actionbar_sub_text_size" type="attr" />
+    <public name="xui_actionbar_action_text_size" type="attr" />
     <public name="xui_actionbar_action_padding" type="attr" />
-    <public name="xui_actionbar_sidetext_padding" type="attr" />
+    <public name="xui_actionbar_side_text_padding" type="attr" />
 
     <public name="xui_btn_view_radius" type="attr" />
     <public name="xui_btn_view_width" type="attr" />
     <public name="xui_btn_view_height" type="attr" />
     <public name="xui_btn_view_text_size" type="attr" />
     <public name="xui_btn_view_border_width" type="attr" />
+    <public name="xui_btn_view_disable_color" type="attr" />
 
     <public name="xui_config_size_title_text" type="attr" />
     <public name="xui_config_size_content_text" type="attr" />
@@ -205,6 +220,7 @@
     <public name="xui_popup_width" type="attr" />
     <public name="xui_tip_popup_padding_top" type="attr" />
     <public name="xui_tip_popup_padding_left" type="attr" />
+    <public name="ms_item_height_size" type="attr" />
 
     <public name="stf_progressbar_size" type="attr" />
     <public name="stf_tip_img_size" type="attr" />
@@ -217,6 +233,12 @@
     <public name="xui_config_color_background" type="attr" />
     <public name="xui_config_color_separator_light" type="attr" />
     <public name="xui_config_color_separator_dark" type="attr" />
+    <public name="xui_config_color_error_text" type="attr" />
+    <public name="xui_config_color_input_text" type="attr" />
+    <public name="xui_config_color_hint_text" type="attr" />
+    <public name="xui_config_color_stroke" type="attr" />
+    <public name="xui_config_color_disable" type="attr" />
+    <public name="xui_config_color_pressed" type="attr" />
 
     <!--drawable-->
     <public name="rb_bg_selector" type="drawable" />
@@ -234,10 +256,10 @@
     <public name="xui_bg_center_popwindow" type="drawable" />
     <public name="xui_popup_bg" type="drawable" />
 
-    <public name="xui_ic_return_back" type="drawable" />
     <public name="xui_ic_default_tip_btn" type="drawable" />
     <public name="xui_ic_default_clear_btn" type="drawable" />
     <public name="xui_ic_arrow_down_black" type="drawable" />
+    <public name="xui_ic_navigation_back_white" type="drawable" />
 
 
 </resources>
